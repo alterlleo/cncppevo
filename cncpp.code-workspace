@@ -25,7 +25,11 @@
 			"istream": "cpp",
 			"locale": "cpp",
 			"streambuf": "cpp",
-			"ratio": "cpp"
+			"ratio": "cpp",
+			"*.tcc": "cpp",
+			"compare": "cpp",
+			"memory_resource": "cpp",
+			"type_traits": "cpp"
 		},
 		"C_Cpp.default.defines": [
 			"POINT_MAIN",
