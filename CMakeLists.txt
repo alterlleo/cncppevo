@@ -134,6 +134,9 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/examples)
 file(GLOB SRC_FILES ${SRC_DIR}/*.cpp)
 file(GLOB HEADERS ${SRC_DIR}/*.hpp)
 
+add_executable(point_test ${SRC_DIR}/point.cpp)
+target_compile_definitions(point_test PRIVATE POINT_MAIN)
+
 
 #   ___           _        _ _
 #  |_ _|_ __  ___| |_ __ _| | |

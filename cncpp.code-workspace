@@ -30,7 +30,11 @@
 			"compare": "cpp",
 			"memory_resource": "cpp",
 			"type_traits": "cpp",
-			"*.in": "cpp"
+			"*.in": "cpp",
+			"expected": "cpp",
+			"chrono": "cpp",
+			"format": "cpp",
+			"system_error": "cpp"
 		},
 		"C_Cpp.default.defines": [
 			"POINT_MAIN",

@@ -1,5 +1,5 @@
 /*
---- POINT ---
+--- POINT.HPP ---
 represents a 3-D coordinate object
 */
 
@@ -15,7 +15,7 @@ namespace cncpp{
 class Point : Object{
   public:
 
-    Point(opt_data_t x = nullopt, opt_data_t y = nullopt, opt_data_z z = nullopt);
+    Point(opt_data_t x = nullopt, opt_data_t y = nullopt, opt_data_t z = nullopt);
 
     Point& operator=(const Point& other){
       if(this != &other){
@@ -32,6 +32,7 @@ class Point : Object{
     /**
      * 
      * @brief Calculates the projections
+     * @example [1 1 0] and [2 1 0] -> [1 0 0]
      * 
      */
      
@@ -46,8 +47,19 @@ class Point : Object{
     void modal(const Point &other);
 
     data_t length() const;
+
+    /**
+     * 
+     * @brief Set all coordinates to nullopt (undefined)
+     * 
+     */
     void reset();
-    string desc() const;
+
+    /**
+     * 
+     * @example Description like: [100.0, 200.0, 123.2]
+     */
+    string desc() const override;
 
     /**
      * 

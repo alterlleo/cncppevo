@@ -9,7 +9,7 @@
 
 #define VERSION "@VERSION@" // it's replaced by the value in the CMAKE, in this case 0.0.1. once it is compiled it will be substituted
 #define BUILD_TYPE "@CMAKE_BUILD_TYPE@"
-#define @BUILD_FLAG@
+//#define @BUILD_FLAG@
 
 
 // --- TYPES ---
@@ -41,7 +41,7 @@ namespace cncpp {
       #endif
 
     
-  }
+  };
 }
 
 
