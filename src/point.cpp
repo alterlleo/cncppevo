@@ -11,8 +11,11 @@
 #include <exception>
 #include <sstream>
 #include <cmath>
+#include <vector>
 #include <fmt/color.h>
+#include <fmt/ranges.h>
 #include <fmt/format.h> //format library
+
 
 using namespace std;
 using namespace cncpp;
@@ -51,7 +54,7 @@ void Point::modal(const Point &p){
 Point Point::operator+(const Point &other) const{
   // both the points must be complete in order to be sum. If not, rise and excp
   if(!is_complete() || !other.is_complete())
-    throw runtime_error("Points are not complete");
+    throw CNCError("Points are not complete", this);
 
   Point out(
 
@@ -68,7 +71,7 @@ Point Point::operator+(const Point &other) const{
 Point Point::delta(const Point &other){
 
   if(!is_complete() || !other.is_complete())
-    throw runtime_error("Points are not complete");
+    throw CNCError("Points are not complete", this);
 
   Point out(
 
@@ -85,7 +88,7 @@ Point Point::delta(const Point &other){
 data_t Point::length() const{
 
   if(!is_complete())
-    throw runtime_error("Points are not complete");
+    throw CNCError("Points are not complete", this);
 
   return sqrt(
     
@@ -127,6 +130,14 @@ string Point::desc(bool colored) const{
   return ss.str();
 
 }
+
+vector<data_t> Point::vec() const{
+
+  if(!is_complete())
+    throw CNCError("Point is not complete", this);
+  
+  return vector<data_t>{_x.value(), _y.value(), _z.value()};
+} 
 
 
 /*
@@ -172,6 +183,31 @@ int main(){
   cout << "Delta of p1 and p3: " << endl;
   cout << p3.delta(p1).desc() << endl;
 
+  /*
+  --- ERROR TEST ---
+  */
+  try{
+    Point p4(120, 20);
+    cout << "p4 length: " << p4.length() << endl;   
+
+  } catch(CNCError &e){
+    cerr << "Error: " << e.what() << endl << "Raised by: " << e.who() << endl;
+
+  } catch(exception &e){
+
+    cerr << "Unexpected error" << endl;
+  }
+
+  /*
+  exception &e means that it catch all the exceptions, also child one
+
+  if there are expections, the code does not stop, so "Done " is printed
+  */
+
+  cout << "Vector from p3: " << endl;
+  cout << format("{}", p3.vec()) << endl;
+
+  cout << "Done. " << endl;
   return 0;
 }
 

@@ -12,6 +12,7 @@ represents a 3-D coordinate object
 #define POINT_HPP
 
 #include "defines.hpp"
+#include <vector>
 
 using namespace std;
 
@@ -78,7 +79,12 @@ class Point : Object{
     }
 
     
-    // accessors
+    /*
+    --- ACCESSORS ---
+    */
+
+    vector<data_t> vec() const;
+
     data_t x() const{ return _x.value(); }
     data_t y() const{ return _y.value(); }
     data_t z() const{ return _z.value(); }

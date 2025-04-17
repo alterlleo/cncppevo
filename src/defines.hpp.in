@@ -43,6 +43,26 @@ namespace cncpp {
 
     
   };
+
+  class CNCError : public std::exception{
+    public:
+      CNCError(const char *msg, const Object *obj) : _msg(msg), _obj(obj){}
+      CNCError(const std::string &m, const Object *obj) : _msg(m), _obj(obj){}
+
+      // this function never rises exceptions
+      const char *what() const noexcept override {
+        return _msg.c_str();
+      }
+
+      std::string who() {
+        return _obj -> desc(false);
+      }
+
+    private:
+      const std::string _msg;
+      const Object *_obj;    // pointer to the object that originates the error
+
+  };
 }
 
 
