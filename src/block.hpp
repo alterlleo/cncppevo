@@ -90,9 +90,11 @@ namespace cncpp{
 
       /**
        * 
-       * @brief lambda function (integral of the trapezoidal profile with Acceleration, Maintenance, Deceleration zones)
+       * @brief lambda function definition(integral of the trapezoidal profile with Acceleration, Maintenance, Deceleration zones) -> it represents the scalar distance traveled along that direction, relative to total lenght (normalized)
        * @param time
        * @param speed reference to speed profile that the function modify -> it is an output
+       * @returns if it is accelerating or decelerating, it is a quadratic form, if cruising, lambda is linear
+       * 
        */
       data_t lambda(data_t time, data_t &speed);
 
