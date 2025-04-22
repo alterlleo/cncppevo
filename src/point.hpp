@@ -101,7 +101,7 @@ class Point : Object{
 
   private:
 
-    opt_data_t _x = nullopt;      // convention -> class attributes have the _
+    opt_data_t _x = nullopt;                  // convention -> class attributes have the _
     opt_data_t _y = nullopt;
     opt_data_t _z = nullopt;
 

@@ -29,7 +29,7 @@ namespace cncpp{
        * @param a acceleration
        * @param d deceleration
        * @param fs starting feedrate
-       * @param fe ending param
+       * @param fe ending feedrate
        * @param dt_1 delta time of acceleration phase
        * @param dt_m delta time of maintenance phase
        * @param dt_2 delta time 
@@ -69,6 +69,7 @@ namespace cncpp{
        * 
        * @brief Constructor. Remember that the gcode put the informations only about the destination block
        * @param line line of the gcode
+       * @param prev previous block reference
        * 
        */
       Block(string line);
@@ -108,6 +109,7 @@ namespace cncpp{
       /**
        * 
        * @brief x(t) = x0 + lambda(t) * delta_x. Defined depending on time
+       * @param time
        * @param lambda reference to lambda -> output
        * @param speed reference to speed -> output
        */
@@ -141,24 +143,24 @@ namespace cncpp{
 
       // some of these values will be computed depending of the machine characteristics
 
-      Machine *_machine;
+      Machine *_machine;                    // pointer to the machine instance
       BlockType _type = BlockType::RAPID;   // default value
       Profile _profile;
 
-      string _line;         // original g-code line
-      size_t _n = 0;        // size_t is an unsigned integer of 64bit (?) --> it is the line number
+      string _line;                         // original g-code line
+      size_t _n = 0;                        // size_t is an unsigned integer of 64bit (?) --> it is the line number
       size_t _tool = 0; 
       data_t _feedrate = 0;
       data_t _arc_feedrate = 0;
       data_t _spindle = 0;
 
-      Point _target();
-      Point _center();    // if we are moving along an arc
-      Point _delta();
+      Point _target();                      // target position
+      Point _center();                      // if we are moving along an arc
+      Point _delta();                       // 
 
       data_t _length = 0;
-      data_t _i = 0, _j = 0, _r = 0;  // i and j are coordinates of the center, r is the radius
-      data_t _theta_0 = 0, _dtheta = 0;   // dtheta is the total delta of the angle
+      data_t _i = 0, _j = 0, _r = 0;        // i and j are coordinates of the center, r is the radius
+      data_t _theta_0 = 0, _dtheta = 0;     // dtheta is the total delta of the angle
       data_t _acc = 0;
 
   };
