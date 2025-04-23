@@ -4,6 +4,8 @@
  |  _ \| |/ _ \ / __| |/ /  / __| |/ _` / __/ __|
  | |_) | | (_) | (__|   <  | (__| | (_| \__ \__ \
  |____/|_|\___/ \___|_|\_\  \___|_|\__,_|___/___/
+
+ It represents a block of gcode, including parsing and interpolation
                                                  
 */
 
@@ -136,16 +138,16 @@ namespace cncpp{
       Point center() const { return _center;}
       Point target() const { return _target;}
       Point delta() const { return _delta;}
-      Profile profile() const { return _profile;}
+      Profile &profile() const { return _profile;}    // the output is the reference to the original profile object in order to save more computation resources. The _profile needs to be a constant of the block, because it is modified only during the parsing phase, it's must be coupled
 
     private:
 
 
       // some of these values will be computed depending of the machine characteristics
 
-      Machine *_machine;                    // pointer to the machine instance
+      Machine *_machine = nullptr;                    // pointer to the machine instance
       BlockType _type = BlockType::RAPID;   // default value
-      Profile _profile;
+      Profile _profile;                     // speed profile of the block
 
       string _line;                         // original g-code line
       size_t _n = 0;                        // size_t is an unsigned integer of 64bit (?) --> it is the line number
@@ -162,6 +164,8 @@ namespace cncpp{
       data_t _i = 0, _j = 0, _r = 0;        // i and j are coordinates of the center, r is the radius
       data_t _theta_0 = 0, _dtheta = 0;     // dtheta is the total delta of the angle
       data_t _acc = 0;
+
+      bool _parsed = f32addf32x             // flag for checking if the block has been parsed or not
 
   };
 
