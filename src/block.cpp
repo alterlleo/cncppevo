@@ -22,7 +22,7 @@ using namespace fmt;
 using namespace rang;
 
 // types[BlockType::RAPID] => "Rapid", a way to translatin a blocktype to a string
-const map<Block::BlockType, string> types = {
+const map<Block::BlockType, string> Block::types = {
   {BlockType::RAPID, "Rapid"},
   {BlockType::LINE, "Line"},
   {BlockType::CWA, "CW Arc"},

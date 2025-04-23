@@ -140,14 +140,14 @@ namespace cncpp{
       Point delta() const { return _delta;}
       size_t m() const{return _m;}
 
-      Profile &profile() const { return _profile;}    // the output is the reference to the original profile object in order to save more computation resources. The _profile needs to be a constant of the block, because it is modified only during the parsing phase, it's must be coupled
+      const Profile &profile() const { return _profile;}    // the output is the reference to the original profile object in order to save more computation resources. The _profile needs to be a constant of the block, because it is modified only during the parsing phase, it's must be coupled
 
     private:
 
 
       // some of these values will be computed depending of the machine characteristics
 
-      Machine *_machine = nullptr;                    // pointer to the machine instance
+      const Machine *_machine = nullptr;                    // pointer to the machine instance
       BlockType _type = BlockType::RAPID;   // default value
       Profile _profile;                     // speed profile of the block
 
@@ -158,9 +158,9 @@ namespace cncpp{
       data_t _arc_feedrate = 0;
       data_t _spindle = 0;
 
-      Point _target();                      // target position
-      Point _center();                      // if we are moving along an arc
-      Point _delta();                       // 
+      Point _target = Point();                      // target position
+      Point _center = Point();                      // if we are moving along an arc
+      Point _delta = Point();                       // 
 
       data_t _length = 0;
       data_t _i = 0, _j = 0, _r = 0;        // i and j are coordinates of the center, r is the radius
