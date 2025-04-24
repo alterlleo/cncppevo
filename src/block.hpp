@@ -78,6 +78,8 @@ namespace cncpp{
       Block(string line, Block &prev);
       ~Block();
 
+      Block &operator=(Block &b); 
+
       /*
       --- METHODS ----
       */

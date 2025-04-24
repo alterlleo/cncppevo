@@ -45,6 +45,10 @@ Block::Block(string line) : _line(line), _n(0) {} // everything else is calculat
 Block::Block(string line, Block &p) : Block(line) {
   
   *this = p;        // copying from previous object
+
+  // by redefining the assignement operator, this stuff is no more needed
+
+  /*
   p.next = this;    
   prev = &p;
 
@@ -52,14 +56,28 @@ Block::Block(string line, Block &p) : Block(line) {
   _type = BlockType::NO_MOTION;
   _target.reset();
   _n = prev -> n() + 1;
-  _line = line;
-
+  _line = line; 
+  */
 }
 
 Block::~Block(){
 
   if(_debug)
     cerr << style::italic << format("Block {:>3} destroyed. ", _n) << style::reset << endl;
+}
+
+Block &Block::operator=(Block &b){
+  // here we assign all the parameters that must be automatically inherited
+  _tool = b._tool;      // we can access the private field because we are working on the same class
+  _feedrate = b._feedrate;
+  _spindle = b._spindle;
+  _n = b._n + 1;
+
+  _target.reset();
+  b.next = this;
+  prev = &b;
+
+  return *this;
 }
 
 string Block::desc(bool colored) const{
@@ -115,7 +133,7 @@ void Block::parse(const Machine *m){
 
   // modal fields
   _target.modal(start_point());
-  _delta = _target.delta(start_point);
+  _delta = _target.delta(start_point());
   _acc = _machine -> A();               // A is the max acceleration provided by the machine
   _length = _delta.length();
 
@@ -135,7 +153,7 @@ void Block::parse(const Machine *m){
       _arc_feedrate = min(
         _feedrate,      // nominal one
         pow(3.0 / 4.0 * pow(_machine -> A(), 2) * pow(_r, 2), 0.25) * 60
-      );
+      );1
 
       compute();
       break;
@@ -150,23 +168,130 @@ void Block::parse(const Machine *m){
 
 data_t Block::lambda(data_t time, data_t &speed){
   
+  if(!_parsed)
+    throw CNCError("Block not parsed", this);
+
   return _profile.lambda(time, speed);
 }
-
 
 
 /*
 --- PRIVATE METHODS ---
 */
+
+/**
+ * 
+ * @brief from a line of gcode we extract the informations
+ * @param token i-th line of the gcode
+ * 
+ */
 void Block::parse_token(string token){
 
+  // we want to support both capital and lower cases, let's put all capital
+  char cmd = toupper(token[0]);   // token[0] is the first letter in the token
+
+  string arg = token.substr(1);   // sub string that starts at the element
+  if(arg.empty())
+    throw CNCError("Empty command argument", this);
+
+  switch(cmd){
+
+  case 'N':
+    _n = stoi(arg);             // stoi takes a string/character and it parses it as an integer
+    if(prev && _n <= prev -> _n)
+      throw CNCError("Block number must be increasing: " + to_string(prev -> _n), this);
+    break;
+
+  case 'G':
+    _type = static_cast<BlockType>(stoi(arg));
+    if(_type > BlockType::NO_MOTION)
+      throw CNCError("Unknown G type", this);
+    break;
+
+  case 'X':
+    _target.x(stod(arg));       //stod is string to double
+    break;
+
+  case 'Y':
+    _target.y(stod(arg));
+    break;
+
+  case 'Z':
+    _target.z(stod(arg));
+    break;
+
+  case 'I':
+    _i = stod(arg);
+    break;
+
+  case 'J':
+    _j = stod(arg);
+    break;
+
+  case 'R':
+    _r = stod(arg);
+    break;
+
+  case 'F':
+    _feedrate = stod(arg);
+    break;
+  
+  case 'S':
+    _spindle = stod(arg);
+    break;
+
+  case 'T':
+    _tool = stoi(arg);
+    break;
+  
+  case 'M':
+    _m = stoi(arg);
+    break;
+
+  default:
+  
+    stringstream ss;
+    ss << "Unknown / unsopported command: '" << token << "'";
+    throw CNCError(ss.str(), this);
+
+  }
 }
 
+/**
+ * 
+ * @brief the previous block if it is present -> the starting point of the machine, so the current positino before the destination point
+ * 
+ */
 Point Block::start_point(){
 
+  return prev ? prev -> target() : _machine -> zero();
 }
 
-void compute(){
+/**
+ * 
+ * @brief evaluate the velocity profile, both for the trapezoidal profile and the triangular profile
+ * 
+ */
+void Block::compute(){
+
+  data_t dt, dt1, dtm, dt2, dq;   // dq is the minimum time step -> the tick
+  data_t f_m;                     // real feedrate
+  data_t &l = _length;            // trick, l is like an alias
+  data_t &A = _acc, a, d;           // nominal accelaration
+
+  f_m = _arc_feedrate / 60.0;     // gcode use mm and minutes
+  dt_1 = f_m / A;
+  dt_2 = dt_1;
+  dt_m = l / f_m - (dt_1 + dt_2) / 2.0;
+
+  // we want to reshape the trapezoidal in order to keep the area consntant adn equal to the lenght
+
+  if(dt_m > 0){                   // long block
+    dt = 
+  } else{                         // short block -> triangle
+
+  }
+
 
 }
 

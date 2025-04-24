@@ -22,8 +22,15 @@ namespace cncpp{
 
     public:
 
+      data_t A() const { return _A;}
+      Point zero() const { return _zero;}
 
     private:  
+
+      data_t _A = 0.0;
+      Point _zero = Point();
+      data_t _tq;                 // sampling quantum -> tick
+
 
 
   };
