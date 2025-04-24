@@ -274,7 +274,7 @@ Point Block::start_point(){
  */
 void Block::compute(){
 
-  data_t dt, dt1, dtm, dt2, dq;   // dq is the minimum time step -> the tick
+  data_t dt, dt_1, dt_m, dt_2, dq;   // dq is the minimum time step -> the tick
   data_t f_m;                     // real feedrate
   data_t &l = _length;            // trick, l is like an alias
   data_t &A = _acc, a, d;           // nominal accelaration
@@ -287,8 +287,10 @@ void Block::compute(){
   // we want to reshape the trapezoidal in order to keep the area consntant adn equal to the lenght
 
   if(dt_m > 0){                   // long block
-    dt = 
+
+
   } else{                         // short block -> triangle
+
 
   }
 
