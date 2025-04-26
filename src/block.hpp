@@ -89,7 +89,6 @@ namespace cncpp{
 
       Block &operator=(Block &b); 
 
-
       /*
         ____        _     _ _                       _   _               _     
        |  _ \ _   _| |__ | (_) ___   _ __ ___   ___| |_| |__   ___   __| |___ 
@@ -236,9 +235,9 @@ namespace cncpp{
   };
 
 
-
-
-
+  std::ostream &operator<<(std::ostream &os, const Block &b){
+    return os << b.desc(); 
+  }
 
 }
 
