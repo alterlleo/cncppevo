@@ -106,6 +106,7 @@ Block::~Block(){
     cerr << style::italic << format("Block {:>3} destroyed [{:p}].", _n, (void *)(this)) << style::reset << endl;
 }
 
+
 Block &Block::operator=(Block &b){
 
   if(!b._parsed) throw CNCError("Previous block has not been parsed", this);
@@ -150,6 +151,7 @@ string Block::desc(bool colored) const{
   return ss.str();
 
 }
+
 
 /*
   ____        _     _ _                       _   _               _     
@@ -375,10 +377,27 @@ Point Block::start_point(){
 
 void Block::compute(){
 
+  // Referencing to profile fields
+
+  data_t &dt = _profile.dt;
+  data_t &dt_1 = _profile.dt_1;
+  data_t &dt_2 = _profile.dt_2;
+  data_t &dt_m = _profile.dt_m;
+  data_t &a = _profile.a;
+  data_t &d = _profile.d;
+  data_t &f_m = _profile.f;
+  data_t &l = _length;            // trick, l is like an alias
+  data_t &A = _acc;               // nominal accelaration
+  data_t dq;
+
+/*
   data_t dt, dt_1, dt_m, dt_2, dq;   // dq is the minimum time step -> the tick
   data_t f_m;                     // real feedrate
   data_t &l = _length;            // trick, l is like an alias
   data_t &A = _acc, a, d;           // nominal accelaration
+*/
+
+  // ... Computations ...
 
   f_m = _arc_feedrate / 60.0;     // gcode use mm and minutes
   dt_1 = f_m / A;
@@ -406,14 +425,32 @@ void Block::compute(){
   a = f_m / dt_1;       // reduced value of the acceleration
   d = -(f_m / dt_2);    // reduced value of the decelration
 
+  /*
+  -> if declaring tmp variables as dt, dt_1, dt_m, dt_2, dq, f_m ,a, d
+        then after the computations you must assign the results to the profile fields.
+
+  // declarations of temporary variables:
+  data_t dt, dt_1, dt_m, dt_2, dq;   // dq is the minimum time step -> the tick
+  data_t f_m;                     // real feedrate
+  data_t &l = _length;            // trick, l is like an alias
+  data_t &A = _acc, a, d;           // nominal accelaration
+
+  // ... computations ...
+  
   // set of the profile variables
   _profile.dt_1 = dt_1;
   _profile.dt_2 = dt_2;
-  _profile.dt_m = dt_m;       // TRY TO USE REFERENCE TRICK, so these assignements will not be needed
+  _profile.dt_m = dt_m;
   _profile.a = a;
   _profile.d = d;
   _profile.f = f_m;
   _profile.dt = dt;
+  _profile.l = l;
+
+  -> if declaring the same variables but inizializing them as references of the actual profile fields, the computation results refers already to the profile fields (reference assignement). This is the current implementation
+
+  */
+
   _profile.l = l;
 }
 
@@ -486,6 +523,7 @@ void Block::calc_arc() {
 #include "machine.hpp"
 
 using namespace cncpp;
+using namespace std;
 
 int main(){
 
@@ -494,8 +532,8 @@ int main(){
   auto b1 = Block("N10 G00 x100 y200 z10 F5000 S5000 T1").parse(&m);
   auto b2 = Block("N20 G01 X10 y20", b1).parse(&m);
   
-  cerr << "b1: " << b1.desc() << endl;
-  cerr << "b2: " << b2.desc() << endl;
+  cerr << "b1: " << b1 << endl;
+  cerr << "b2: " << b2 << endl;
   
   // Walk along b2
   b2.walk([&](Block &b, data_t t, data_t l, data_t s) {
