@@ -20,7 +20,7 @@ using namespace std;
 
 namespace cncpp{
 
-  class Machine : Object{
+  class Machine final : Object{
 
     public:
 
