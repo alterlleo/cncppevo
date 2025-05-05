@@ -27,12 +27,12 @@ namespace cncpp{
     auto data = YAML::LoadFile(s);      // data now is an object which has all the methosds and attributes that can be used in order to access to all yaml fields
 
     auto machine = data["machine"];
-    _A = machine["A"].as<data_t>();
-    _tq = machine["tq"].as<data_t>();
+    _A         = machine["A"].as<data_t>();
+    _tq        = machine["tq"].as<data_t>();
     _max_error = machine["max_error"].as<data_t>();
-    _fmax = machine["fmax"].as<data_t>();
-    _zero = Point(machine["zero"][0].as<data_t>(), machine["zero"][1].as<data_t>(), machine["zero"][2].as<data_t>());
-    _offset = Point(machine["offset"][0].as<data_t>(), machine["offset"][1].as<data_t>(), machine["offset"][2].as<data_t>());
+    _fmax      = machine["fmax"].as<data_t>();
+    _zero      = Point(machine["zero"][0].as<data_t>(), machine["zero"][1].as<data_t>(), machine["zero"][2].as<data_t>());
+    _offset    = Point(machine["offset"][0].as<data_t>(), machine["offset"][1].as<data_t>(), machine["offset"][2].as<data_t>());
 
   }
 
