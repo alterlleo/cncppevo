@@ -80,7 +80,7 @@ data_t Block::Profile::lambda(data_t t, data_t &s){
 /*
 --- PUBLIC METHODS ---
 */
-Block::Block(string line) : _line(line), _n(0) {} // everything else is calculated in the parsing function
+Block::Block(string line) : _line(line), _n(0), prev(nullptr), next(nullptr) {} // everything else is calculated in the parsing function
 
 Block::Block(string line, Block &p) : Block(line) {
   
@@ -88,7 +88,7 @@ Block::Block(string line, Block &p) : Block(line) {
 
   // by redefining the assignement operator, this stuff is no more needed
 
-  /*
+  
   p.next = this;    
   prev = &p;
 
@@ -97,7 +97,9 @@ Block::Block(string line, Block &p) : Block(line) {
   _target.reset();
   _n = prev -> n() + 1;
   _line = line; 
-  */
+  _parsed = false;
+  _m = 0;
+  
 }
 
 Block::~Block(){
@@ -309,7 +311,7 @@ void Block::parse_token(string token){
 
   case 'N':
     _n = stoi(arg);             // stoi takes a string/character and it parses it as an integer
-    if(prev && _n <= prev -> _n)
+    if(prev && _n <= prev -> n())
       throw CNCError("Block number must be increasing: " + to_string(prev -> _n), this);
     break;
 
