@@ -44,7 +44,7 @@ std::string Program::desc(bool colored) const{
   return ss.str();
 }
 
-void Program::load(const std::string &f, bool append){
+void Program::load(const string &f, bool append){
   _filename = f;
 
   // open the file and create a new block with it and add the block to the list
@@ -95,37 +95,62 @@ Program &Program::operator<<(string line){
 
 int main(int argc, const char *argv[]){
 
-if(argc < 2){ // if we don't have enough arguments
-  cerr << "Usage: " << argv[0] << " <file.gcode>" << endl;
-  return 1;
-}
+  if(argc < 2){ // if we don't have enough arguments
+    cerr << "Usage: " << argv[0] << " <file.gcode>" << endl;
+    return 1;
+  }
 
-Machine machine;
+  Machine machine;
 
-try{
-  machine.load("machine.yml");
+  try{
+    machine.load("machine.yml");
 
-} catch (exception &e){
+  } catch (exception &e){
 
-  cerr << fg::red << style::bold << "Error: " << e.what() << style::reset << fg::reset << endl;
-  return 1;
-}
+    cerr << fg::red << style::bold << "Error: " << e.what() << style::reset << fg::reset << endl;
+    return 1;
+  }
 
-// if the machine is loaded, then we can load the prorgam
-Program program(&machine);
+  // if the machine is loaded, then we can load the prorgam
+  Program program(&machine);
 
-try{
-  program.load(argv[1]);    // the argument must be passed by command line
+  try{
+    program.load(argv[1]);    // the argument must be passed by command line
 
-} catch(exception &e){
+  } catch(exception &e){
 
-  cerr << fg::red << style::bold << "Error: " << e.what() << style::reset << fg::reset << endl;
-  return 2;
-}
+    cerr << fg::red << style::bold << "Error: " << e.what() << style::reset << fg::reset << endl;
+    return 2;
+  }
 
-cout << program.desc() << endl;
+  // try to program << "some line";
+  // maybe with a safe position
 
-return 0;
+  cout << program.desc() << endl;
+
+  // test concatenating other lines 
+  try {
+      program << "N10 G0 X0 Y0 Z0"
+              << "N15 M30";
+      program << "N20 G1 X10 Y10 Z10 F1000";
+      program << "N30 G2 X20 Y20 Z20 I10 J10 K30 F500";
+    } catch (CNCError &e) {
+      cerr << fg::red << style::bold << "Error: " << e.what() << " in " << e.who()
+          << fg::reset << style::reset << endl;
+    }
+
+  cout << program.desc(false) << endl;
+
+  for (auto &b : program) {
+    cout << b.n() << ": length " << b.length() << endl;
+  }
+
+  // reset
+  program.reset();
+  cout << "Program after reset: " << program.desc() << endl;
+
+
+  return 0;
 }
 
 #endif
