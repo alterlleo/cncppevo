@@ -55,7 +55,7 @@ namespace cncpp{
        */
       void load(const std::string &filename, bool append = false);
 
-      std::string desc(bool colored) const override;
+      std::string desc(bool colored = true) const override;
 
       /**
        * 

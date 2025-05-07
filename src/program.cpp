@@ -11,6 +11,7 @@
 #include <rang.hpp>
 #include <fmt/core.h>
 #include <fstream>
+#include <sstream>
 
 using namespace cncpp;
 using namespace std;
@@ -30,6 +31,17 @@ Program::~Program(){
 
 std::string Program::desc(bool colored) const{
   
+  ostringstream ss;     // output stringstream
+
+  for(auto &b : *this){ // we loop all the blocks inside the current program object
+
+    ss << b.desc();
+    ss << format(", previous: {:0>3}", b.prev ? b.prev -> n() : 0);
+    ss << endl;
+
+  }
+
+  return ss.str();
 }
 
 void Program::load(const std::string &f, bool append){
@@ -58,7 +70,7 @@ Program &Program::operator<<(string line){
   if(size() > 0){
 
     // the current program is not empty
-    emplace_back(line, back());
+    emplace_back(line, back()); // it's the same as -> emplace_back(Block(line, back()));
 
   } else{
     emplace_back(line);
@@ -70,3 +82,50 @@ Program &Program::operator<<(string line){
 }
 
 
+/*
+  _____         _                     _       
+ |_   _|__  ___| |_   _ __ ___   __ _(_)_ __  
+   | |/ _ \/ __| __| | '_ ` _ \ / _` | | '_ \ 
+   | |  __/\__ \ |_  | | | | | | (_| | | | | |
+   |_|\___||___/\__| |_| |_| |_|\__,_|_|_| |_|
+                                              
+*/
+
+#ifdef PROGRAM_MAIN
+
+int main(int argc, const char *argv[]){
+
+if(argc < 2){ // if we don't have enough arguments
+  cerr << "Usage: " << argv[0] << " <file.gcode>" << endl;
+  return 1;
+}
+
+Machine machine;
+
+try{
+  machine.load("machine.yml");
+
+} catch (exception &e){
+
+  cerr << fg::red << style::bold << "Error: " << e.what() << style::reset << fg::reset << endl;
+  return 1;
+}
+
+// if the machine is loaded, then we can load the prorgam
+Program program(&machine);
+
+try{
+  program.load(argv[1]);    // the argument must be passed by command line
+
+} catch(exception &e){
+
+  cerr << fg::red << style::bold << "Error: " << e.what() << style::reset << fg::reset << endl;
+  return 2;
+}
+
+cout << program.desc() << endl;
+
+return 0;
+}
+
+#endif
