@@ -136,7 +136,7 @@ file(GLOB HEADERS ${SRC_DIR}/*.hpp)
 
 # creating our library for source files
 add_library(cncpp_lib STATIC ${SRC_FILES})
-target_link_libraries(cncpp_lib PRIVATE fmt::fmt yaml-cpp::yaml-cpp)
+target_link_libraries(cncpp_lib PRIVATE fmt::fmt yaml-cpp::yaml-cpp mosquittopp)
 
 add_executable(point_test ${SRC_DIR}/point.cpp)
 target_compile_definitions(point_test PRIVATE POINT_MAIN)

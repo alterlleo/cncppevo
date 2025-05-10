@@ -16,6 +16,8 @@
 #include "defines.hpp"
 #include "point.hpp"
 #include <mosquittopp.h>
+#include <mosquittopp.h>
+#include <mosquitto.h>
 #include <nlohmann/json.hpp>
 
 using namespace std;
