@@ -60,6 +60,10 @@ void Program::load(const string &f, bool append){
   string line;
   while(getline(file, line)){     // we load a line each iteration
 
+    if(line[0] == '#'){           // if there is some empty line just jump it over
+      continue;
+    }
+
     *this << line;
   }
 

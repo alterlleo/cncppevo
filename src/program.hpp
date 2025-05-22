@@ -81,7 +81,7 @@ namespace cncpp{
         
         }
 
-_       done = _current == end();
+       _done = _current == end();
         return _current;
         
       }

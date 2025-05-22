@@ -111,5 +111,6 @@ runna il broker di mqtt
 compila e runna build/cncpp machine.yml test.gcode e dovremmo avere i print degli stati correnti
 
 
+usa interface_testing su rstudio
 
 */
