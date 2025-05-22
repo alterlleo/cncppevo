@@ -73,9 +73,17 @@ namespace cncpp{
        * 
        */
       iterator load_next(){
-        _current++;
-        _done = _current == end();
+        if(_current == end()){      // this is needed in order to shift one step before, ore else we would start at the second block -> bad
+          _current = begin();
+
+        } else{
+          _current++;
+        
+        }
+
+_       done = _current == end();
         return _current;
+        
       }
 
       /**
@@ -84,7 +92,7 @@ namespace cncpp{
        * 
        */
       void rewind(){
-        _current = begin();
+        _current = end();
         _done = false;
       } 
 
@@ -110,7 +118,7 @@ namespace cncpp{
 
       Machine *_machine = nullptr;
       std::string _filename;
-      iterator _current = begin();      // pointer to the current element of the list -> begin is the first element in the list and when we move we iterate this iterator
+      iterator _current = end();      // pointer to the current element of the list -> begin is the first element in the list and when we move we iterate this iterator
       bool _done = false;
 
   };

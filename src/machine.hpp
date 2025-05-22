@@ -91,7 +91,7 @@ namespace cncpp{
       data_t error() const { return _error;}
       data_t max_error() const { return _max_error;}
       Point position() const { return _position;}
-      Point position(Point p) { _position = p, return _position;}
+      Point position(Point p) { _position = p; return _position;}
       Point setpoint() const { return _setpoint;}
       Point setpoint(Point p) {_setpoint = p; return _setpoint;}      // also writer 
       Point setpoint(data_t x, data_t y, data_t z){                   // also writer
@@ -167,7 +167,7 @@ namespace cncpp{
                                           // position is the point given from the machine
       data_t _tq = 0.005;                 // sampling time -> tick
       data_t _fmax;
-      data_t _error = 0.0;                // current error
+      data_t _error = INFINITY;                // current error, at the beginning we want a large error in order to go the initial starting position
       data_t _max_error = 0.005;          // maximum allowable error -> 5 micrometers
 
       string _mqtt_host = "localhost";    // broker running on the same machine (our assumption)

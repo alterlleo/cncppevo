@@ -102,3 +102,14 @@ int main(int argc, const char *argv[]){
 
   return 0;
 }
+
+
+
+/*
+
+runna il broker di mqtt
+compila e runna build/cncpp machine.yml test.gcode e dovremmo avere i print degli stati correnti
+
+
+
+*/
