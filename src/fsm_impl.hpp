@@ -17,8 +17,14 @@ TODO -> rewrite here all what we wrote in fsm.cpp, so we won't include the defin
 ******************************************************************************/
 
     
-using namespace std;
+#include "cncpp.hpp"
+#include <keystroker.h>
+#include <rang.hpp>
+#include <fmt/core.h>
     
+using namespace std;
+using namespace rang;
+using namespace fmt;
 
 // SEARCH FOR Your Code Here FOR CODE INSERTION POINTS!
 
