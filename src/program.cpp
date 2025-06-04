@@ -65,6 +65,11 @@ void Program::load(const string &f, bool append){
     }
 
     *this << line;
+
+    if(back().shaping()){
+
+      *this << back().arc_shaping();
+    }
   }
 
   file.close();

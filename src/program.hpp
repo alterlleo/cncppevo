@@ -20,7 +20,7 @@
 
 namespace cncpp{
 
-  class Program : Object, public std::list<Block>{
+  class Program : Object, public std::list<BlockTRC>{
 
     public:
 
@@ -65,7 +65,7 @@ namespace cncpp{
        */
       Program &operator<<(std::string line);
 
-      using iterator = std::list<Block>::iterator;        // let's define an alias
+      using iterator = std::list<BlockTRC>::iterator;        // let's define an alias
 
       /**
        * 
