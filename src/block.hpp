@@ -22,7 +22,7 @@ using namespace std;
 
 namespace cncpp{
 
-  class Block : Object{
+  class Block : protected Object{
     public:
 
       /**

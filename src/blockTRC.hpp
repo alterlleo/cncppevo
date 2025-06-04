@@ -20,7 +20,7 @@ using namespace std;
 
 namespace cncpp{
 
-  class BlockTRC : Block{
+  class BlockTRC : public Block{
 
     public:
 

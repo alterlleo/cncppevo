@@ -41,6 +41,8 @@ BlockTRC &BlockTRC::operator=(BlockTRC &b){
 
   Block::operator=(b);
   _trc = b.trc();
+
+  return *this;
 }
 
 BlockTRC &BlockTRC::parse(const Machine *m){
@@ -132,7 +134,7 @@ BlockTRC BlockTRC::arc_shaping(){
   _shaping_required = false;
 
   // compute the parameters of the new arc to be added 
-  
+
 
 }
 
@@ -159,7 +161,7 @@ void BlockTRC::parse_token(string token){
   case 'N':
     _n = stoi(arg);             // stoi takes a string/character and it parses it as an integer
     if(prev && _n <= prev -> n())
-      throw CNCError("Block number must be increasing: " + to_string(prev -> _n), this);
+      throw CNCError("Block number must be increasing: " + to_string(prev -> n()), this);
     break;
 
   case 'G':

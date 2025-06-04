@@ -12,7 +12,7 @@
 #ifndef PROGRAM_HPP
 #define PROGRAM_HPP
 
-#include "block.hpp"
+#include "blockTRC.hpp"
 #include "machine.hpp"
 #include "defines.hpp"
 #include <list>
