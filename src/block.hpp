@@ -168,7 +168,7 @@ namespace cncpp{
 
       const Profile &profile() const { return _profile;}    // the output is the reference to the original profile object in order to save more computation resources. The _profile needs to be a constant of the block, because it is modified only during the parsing phase, it's must be coupled
 
-    private:
+    protected:
 
 
       // some of these values will be computed depending of the machine characteristics
