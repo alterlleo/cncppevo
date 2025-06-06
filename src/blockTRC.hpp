@@ -75,7 +75,7 @@ namespace cncpp{
        * @return BlockTRC instance
        * 
        */
-      BlockTRC arc_shaping();
+      string arc_shaping();
       string desc(bool colored = true) const override;
 
 

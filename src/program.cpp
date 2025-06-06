@@ -68,7 +68,7 @@ void Program::load(const string &f, bool append){
 
     if(back().shaping()){
 
-     // *this << back().arc_shaping();
+     *this << back().arc_shaping();
     }
   }
 

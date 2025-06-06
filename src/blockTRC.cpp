@@ -33,7 +33,7 @@ const map<BlockTRC::TRCType, string> BlockTRC::trc_types = {
 
 BlockTRC::BlockTRC(string line) : Block(line) , _trc(false) {}
 
-BlockTRC::BlockTRC(string line, BlockTRC &prev) : Block(line, prev) {}
+BlockTRC::BlockTRC(string line, BlockTRC &prev) : Block(line, prev), _trc(false) {}
 
 BlockTRC::~BlockTRC(){}
 
@@ -113,7 +113,7 @@ BlockTRC &BlockTRC::parse(const Machine *m){
 
       _trc = true;
 
-      if(angle_with_prev() > 3.1415){   // TODO: #define in defines.hpp for pi
+      if(angle_with_prev() > 3.1415 && dynamic_cast<BlockTRC*>(prev) -> trc()){   // TODO: #define in defines.hpp for pi
         
         _shaping_required = true;
       } else{
@@ -161,13 +161,48 @@ string BlockTRC::desc(bool colored) const{
 }
 
 
-
-BlockTRC BlockTRC::arc_shaping(){
+string BlockTRC::arc_shaping() {
 
   _shaping_required = false;
 
-  // compute the parameters of the new arc to be added 
+  const Point p0 = prev->target();
+  const Point p1 = target();
+  const Point pm = prev->start_point();
 
+  Point v1 = p0.delta(pm);
+  Point v2 = p1.delta(p0);
+  v1.scale(1 / v1.length());
+  v2.scale(1 / v2.length());
+
+  // bisector = vector that connectes the prev starting point and the actual target. Thanks to that it's possible to find the center of the junction arc
+  Point bisector = v1 + v2;
+  bisector.scale(1 / bisector.length());
+
+  Point normal(-bisector.y(), bisector.x());
+  if (_trc_type == TRCType::RIGHT) {
+    normal.scale(-1);
+  }
+
+  data_t r = _machine->machine_tool_radius();
+  normal.scale(r);
+  Point arc_center = p0 + normal;
+
+  data_t i = arc_center.x() - p0.x();
+  data_t j = arc_center.y() - p0.y();
+
+  // G2 or G3 depending junction curvature side
+  data_t side = v1.x() * v2.y() - v1.y() * v2.x();
+  int arc_code = (side < 0) ? 2 : 3;
+
+  std::string arc_line = fmt::format(
+    "G{:<02d} X{:.3f} Y{:.3f} I{:.3f} J{:.3f} F{:.0f}",
+    arc_code,
+    p0.x(), p0.y(),
+    i, j,
+    _feedrate
+  );
+
+  return arc_line;
 }
 
 
@@ -265,7 +300,7 @@ void BlockTRC::parse_token(string token){
 
 data_t BlockTRC::angle_with_prev(){
 
-
+  return 2.9;
 }
 
 

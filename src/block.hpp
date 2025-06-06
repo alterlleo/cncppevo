@@ -141,6 +141,13 @@ namespace cncpp{
        */
       void walk(function<void(Block &b, data_t t, data_t l, data_t s)> f);
 
+      /**
+       * 
+       * @brief the previous block if it is present -> the starting point of the machine, so the current positino before the destination point
+       * 
+       */
+      Point start_point();
+
 
       /*
            _                                        
@@ -213,13 +220,6 @@ namespace cncpp{
        * 
        */
       void parse_token(string token);
-
-      /**
-       * 
-       * @brief the previous block if it is present -> the starting point of the machine, so the current positino before the destination point
-       * 
-       */
-      Point start_point();
 
       /**
        * 
