@@ -71,7 +71,7 @@ Point Point::operator+(const Point &other) const{
 }
 
 
-Point Point::delta(const Point &other){
+Point Point::delta(const Point &other) const {
 
   if(!is_complete() || !other.is_complete())
     throw CNCError("Points are not complete", this);
@@ -102,6 +102,13 @@ data_t Point::length() const{
   );
 
 }
+
+void Point::scale(data_t factor){
+  _x = _x.value() * factor;
+  _y = _y.value() * factor;
+  _z = _z.value() * factor;
+}
+
 
 static string coord_str(opt_data_t const &coord, col_t const &color){
   // a static function is only visible within its file

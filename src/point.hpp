@@ -42,7 +42,7 @@ class Point : Object{
      * 
      */
      
-    Point delta(const Point &other);
+    Point delta(const Point &other) const;
 
     /**
      * 
@@ -53,6 +53,8 @@ class Point : Object{
     void modal(const Point &other);
 
     data_t length() const;
+
+    void scale(data_t factor);
 
     /**
      * 
