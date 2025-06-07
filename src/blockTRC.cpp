@@ -113,7 +113,7 @@ BlockTRC &BlockTRC::parse(const Machine *m){
 
       _trc = true;
 
-      if(angle_with_prev() > 3.1415 && dynamic_cast<BlockTRC*>(prev) -> trc()){   // TODO: #define in defines.hpp for pi
+      if(angle_with_prev() > 3.1415){   // TODO: #define in defines.hpp for pi
         
         _shaping_required = true;
       } else{
