@@ -91,7 +91,7 @@ Program &Program::operator<<(string line){
     emplace_back(line, back()); // it's the same as -> emplace_back(Block(line, back()));
 
   } else{
-    emplace_back(line);
+    emplace_back(line, nullptr);
 
   }
 
@@ -122,6 +122,7 @@ int main(int argc, const char *argv[]){
 
   try{
     machine.load("machine.yml");
+    cerr << "check" << endl;
 
   } catch (exception &e){
 

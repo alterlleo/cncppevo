@@ -20,7 +20,7 @@
 
 namespace cncpp{
 
-  class Program : Object, public std::list<BlockTRC>{
+  class Program : Object, public std::list<Block*>{
 
     public:
 
