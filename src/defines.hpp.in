@@ -12,6 +12,7 @@
 #define @BUILD_FLAG@
 #define NUMBERS_WIDTH "7"
 #define MQTT_BUFLEN 1024
+#define PI 3.141592653589793
 
 
 // --- TYPES ---
