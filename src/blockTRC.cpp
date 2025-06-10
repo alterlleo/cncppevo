@@ -187,6 +187,8 @@ void BlockTRC::line_line_shift(BlockTRC *p){
   Point tc = target();                          // target point of the current block
   data_t r = _machine -> machine_tool_radius(); // current tool radius
 
+  // TODO : when angle > pi, then offset it's enough, no intersections because there is arc_shaping
+
   Point v1 = tp.delta(sp);
   Point v2 = tc.delta(sc);
   v1.scale(1 / v1.length());
@@ -211,9 +213,39 @@ void BlockTRC::line_line_shift(BlockTRC *p){
 }
 
 void BlockTRC::line_arc_shift(BlockTRC *p){
+  Point sp = p -> start_point();
+  Point tp = p -> target();
+  data_t r = _machine -> machine_tool_radius(); 
+
+  // TODO : when angle > pi, then offset it's enough, no intersections because there is arc_shaping
+
+  Point v = tp.delta(sp);
+  v.scale(1 / v.length());
+
+  Point normal(-v.y(), v.x());
+  if(p -> _trc_type == TRCType::RIGHT)
+    normal.scale(-1);
+
+  normal.scale(r);
+  Point offset = tp + normal;             // target offset by its normal * radius
+
+  data_t comp_r = _r + r;                 // compensated radius
+  Point v2 = offset - _center;            // vector from the center to the offset target of the previous move
+
+  data_t dist = pow(v2.x(), 2) + pow(v2.y(), 2);
+  if(dist <= pow(comp_r, 2)){
+
+    // report here calculus from sheets, first conclusive idea
+    data_t scaling = sqrt(pow(comp_r, 2) / dist - 1);
+    Point intersection1 = _center + Point(v2.x() - scaling * v2.y(), v2.y() + scaling * v2.x());
+    Point intersection2 = _center + Point(v2.x() + scaling * v2.y(), v2.y() - scaling * v2.x());
+
+    Point closer_approx = (intersection1.delta(tp).length() < intersection2.delta(tp).length()) ? intersection1 : intersection2;
+
+    p -> update_target(closer_approx.x(), closer_approx.y());
+  } 
 
 }
-
 
 string BlockTRC::arc_shaping() {
 
