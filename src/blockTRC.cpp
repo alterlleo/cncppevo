@@ -271,8 +271,7 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
     cerr << p -> target().desc();
 
     if (!p->target().is_complete()) {
-      cerr << "ERROR: p->target() is incomplete!" << endl;
-      cerr << "p->target(): " << p->target().desc() << endl;
+      throw CNCError("Target point incomplete", this);
       return;
     }
 
