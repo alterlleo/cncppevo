@@ -85,8 +85,9 @@ void Program::load(const string &f, bool append){
       BlockTRC *pr_tmp = dynamic_cast<BlockTRC*>(back() -> prev);
 
       BlockTRC *corner = new BlockTRC(arc, pr_tmp);
-      corner -> set_shaping_corner();
+      // corner -> set_shaping_corner();
 
+      // inception of a new block means that the (last - 1) prev pointer poisnt to last-2, adn the last prev pointer must point to the new arc added
       back() -> prev = corner;
       corner -> next = back();
 

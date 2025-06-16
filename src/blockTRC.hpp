@@ -58,7 +58,8 @@ namespace cncpp{
       
       bool trc() const { return _trc; }
       bool shaping() const { return _shaping_required; }
-      void set_shaping_corner() { _shaping_corner = true; }
+      // void set_shaping_corner() { _shaping_corner = true; }
+      bool shaping_corner() const {return _shaping_corner; }
 
       /*
         ____        _     _ _                       _   _               _     

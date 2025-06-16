@@ -160,24 +160,26 @@ string BlockTRC::desc(bool colored) const{
 void BlockTRC::shift_prev_target(){
 
   BlockTRC *p = dynamic_cast<BlockTRC*>(prev);
-  cerr << "check check check" << endl;
 
-  if(p -> trc()){
+  if(p -> trc() /*|| p -> shaping_corner()*/){
     
-    if (p->type() == BlockType::LINE && type() == BlockType::LINE) {
+    if (p -> type() == BlockType::LINE && type() == BlockType::LINE) {
 
-        cerr << "1 check " << endl;
         line_line_shift(p);
 
-      } else if (p->type() == BlockType::LINE && (type() == BlockType::CWA || type() == BlockType::CCWA)) {
+      } else if (p -> type() == BlockType::LINE && (type() == BlockType::CWA || type() == BlockType::CCWA)) {
         
         cerr << "2 check " << endl;
         line_arc_shift(p);
+      
+      } else if ((p -> type() == BlockType::CWA || p -> type() == BlockType::CCWA ) && type() == BlockType::LINE){
+
+        // TODO
+
       }
   }
 
   cerr << "check shifting" << endl;
-
 }
 
 void BlockTRC::line_line_shift(BlockTRC *prev){
@@ -185,7 +187,7 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
   BlockTRC *p = prev;
 
   if(!p){
-    cerr << "null pointer" << endl;
+    throw CNCError("Null previous block pointer ", this);
     return;
   }
 
