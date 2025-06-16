@@ -85,7 +85,8 @@ namespace cncpp{
        */
       Block(string line);
       Block(string line, Block &prev);
-      ~Block();
+      Block(string line, Block *prev);
+      virtual ~Block();
 
       Block &operator=(Block &b); 
 

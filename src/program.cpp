@@ -35,8 +35,8 @@ std::string Program::desc(bool colored) const{
 
   for(auto &b : *this){ // we loop all the blocks inside the current program object
 
-    ss << b.desc();
-    ss << format(", previous: {:0>3}", b.prev ? b.prev -> n() : 0);
+    ss << b -> desc();
+    ss << format(", previous: {:0>3}", b -> prev ? b -> prev -> n() : 0);
     ss << endl;
 
   }
@@ -65,19 +65,25 @@ void Program::load(const string &f, bool append){
     }
 
     *this << line;
+    back() -> desc();
 
-    if(dynamic_cast<BlockTRC*>(back().prev) -> trc()){
-      back().shift_prev_target();
+    BlockTRC* pr = dynamic_cast<BlockTRC*>(back()->prev);
+    if(pr && pr -> trc()){
+
+      cerr << "check shift" << endl;
+      back() -> desc();
+
+      back() -> shift_prev_target();
     }
 
-    if(back().shaping()){
+    if(back() -> shaping()){
 
-      list<BlockTRC>::iterator iter = prev(this -> end());
-      BlockTRC &prev_ref = *dynamic_cast<BlockTRC*>(back().prev);
-      string arc = back().arc_shaping();
+      list<BlockTRC*>::iterator iter = prev(this -> end());
+      string arc = back() -> arc_shaping();
       
-      this -> insert(iter, BlockTRC(arc, prev_ref));
-      *this << back().arc_shaping();
+      BlockTRC *pr_tmp = dynamic_cast<BlockTRC*>(back() -> prev);
+      this -> insert(iter, new BlockTRC(arc, pr_tmp));
+      *this << back() -> arc_shaping();
     }
   }
 
@@ -88,14 +94,15 @@ Program &Program::operator<<(string line){
   if(size() > 0){
 
     // the current program is not empty
-    emplace_back(line, back()); // it's the same as -> emplace_back(Block(line, back()));
+    emplace_back(new BlockTRC(line, back())); // it's the same as -> emplace_back(Block(line, back()));
 
   } else{
-    emplace_back(line, nullptr);
+
+    emplace_back(new BlockTRC(line));
 
   }
 
-  back().parse(_machine);
+  back() -> BlockTRC::parse(_machine);
   return *this;
 }
 
@@ -122,7 +129,6 @@ int main(int argc, const char *argv[]){
 
   try{
     machine.load("machine.yml");
-    cerr << "check" << endl;
 
   } catch (exception &e){
 
@@ -134,6 +140,7 @@ int main(int argc, const char *argv[]){
   Program program(&machine);
 
   try{
+
     program.load(argv[1]);    // the argument must be passed by command line
 
   } catch(exception &e){
@@ -161,13 +168,12 @@ int main(int argc, const char *argv[]){
   cout << program.desc(false) << endl;
 
   for (auto &b : program) {
-    cout << b.n() << ": length " << b.length() << endl;
+    cout << b -> n() << ": length " << b -> length() << endl;
   }
 
   // reset
   program.reset();
   cout << "Program after reset: " << program.desc() << endl;
-
 
   return 0;
 }

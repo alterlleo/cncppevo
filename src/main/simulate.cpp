@@ -79,14 +79,14 @@ int main(int argc, char *argv[]){
   for(auto &b : program){
 
     // check blocktype in order to skip the rapid block
-    if(b.type() == bt::RAPID || b.type() == bt::NO_MOTION){
+    if(b -> type() == bt::RAPID || b -> type() == bt::NO_MOTION){
 
-      cerr << fg::yellow << "Skipping block " << b.line() << fg::reset << endl;
+      cerr << fg::yellow << "Skipping block " << b -> line() << fg::reset << endl;
       continue;     //"skip" this iteration
     }
     
     // the & in the [] means that i can have access to the reference of outer parameters
-    b.walk([&](Block &b, data_t t, data_t lambda, data_t feedrate){
+    b -> walk([&](Block &b, data_t t, data_t lambda, data_t feedrate){
 
       pos = b.interpolate(lambda);
       // t is the current time related to the block, but we also want a total time

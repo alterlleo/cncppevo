@@ -35,6 +35,8 @@ BlockTRC::BlockTRC(string line) : Block(line), _trc(false) {}
 
 BlockTRC::BlockTRC(string line, BlockTRC &prev) : Block(line, prev), _trc(false) {}
 
+BlockTRC::BlockTRC(string line, BlockTRC *b) : Block(line, b), _trc(false) {}
+
 BlockTRC::~BlockTRC(){}
 
 BlockTRC &BlockTRC::operator=(BlockTRC &b){
@@ -165,29 +167,40 @@ string BlockTRC::desc(bool colored) const{
 void BlockTRC::shift_prev_target(){
 
   BlockTRC *p = dynamic_cast<BlockTRC*>(prev);
+  cerr << "check check check" << endl;
 
   if(p -> trc()){
     
     if (p->type() == BlockType::LINE && type() == BlockType::LINE) {
 
+        cerr << "1 check " << endl;
         line_line_shift(p);
 
       } else if (p->type() == BlockType::LINE && (type() == BlockType::CWA || type() == BlockType::CCWA)) {
         
+        cerr << "2 check " << endl;
         line_arc_shift(p);
       }
   }
 
+  cerr << "check shifting" << endl;
+
 }
 
 void BlockTRC::line_line_shift(BlockTRC *p){
+
+  if(!p){
+    cerr << "null pointer" << endl;
+    return;
+  }
+
   Point sp = p -> start_point();                // starting point of the previous block
   Point tp = p -> target();                     // target point of the previous block
   Point sc = start_point();                     // starting point of the current block
   Point tc = target();                          // target point of the current block
   data_t r = _machine -> machine_tool_radius(); // current tool radius
 
-  cerr << style::italic << "Starting TRC line-line between: " << endl << style::reset << this -> desc();
+  cerr << style::italic << "Starting TRC line-line between: " << endl << style::reset << this -> desc() << endl; 
   cerr << style::italic << "And previous move: " << style::reset << endl;
   cerr << style::italic << p -> desc() << style::reset << endl << endl;
 
@@ -211,9 +224,28 @@ void BlockTRC::line_line_shift(BlockTRC *p){
     b1 += offset_value;
     b2 += offset_value;
 
+    data_t xd = 0, yd = 0;
+
     // intersection
-    data_t xd = (b2 - b1) / (a1 - a2);
-    data_t yd = a1 * xd + b1;
+    if(fabs(a1 - a2) > 1e-8){
+
+      xd = (b2 - b1) / (a1 - a2);
+      yd = a1 * xd + b1;
+
+    } else{ // no intersection, parallel lines
+
+      Point normal(-v1.y(), v1.x());
+      if (p->_trc_type == TRCType::RIGHT)
+        normal.scale(-1);
+
+      normal.scale(r);  // offset direction by tool radius
+      xd = (p -> target() + normal).x();
+      yd = (p -> target() + normal).y();
+
+      cerr << xd << endl;
+      cerr << yd << endl;
+    }
+    
 
     p -> update_target(xd, yd);
     cerr << style::italic << "New target from TRC while angle < PI: " << endl <<  p -> desc() << style::reset << endl << endl;

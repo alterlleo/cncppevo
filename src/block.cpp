@@ -102,6 +102,25 @@ Block::Block(string line, Block &p) : Block(line) {
   
 }
 
+Block::Block(string line, Block *b) : Block(line){
+  this -> _tool = b -> _tool;
+  this -> _feedrate = b -> _feedrate;
+  this -> _spindle = b -> _spindle;
+  this -> _n = b -> _n + 1;
+  this -> _target.reset();
+  b -> next = this;
+  prev = b;
+
+  // reset non-modal parameters
+  _type = BlockType::NO_MOTION;
+  _target.reset();
+  _n = prev -> n() + 1;
+  _line = line; 
+  _parsed = false;
+  _m = 0;
+}
+
+
 Block::~Block(){
 
   if(_debug)
@@ -264,8 +283,6 @@ Point Block::interpolate(data_t lambda){
   return result;
 
 }
-
-
 
 Point Block::interpolate(data_t time, data_t &lambda, data_t &speed){
   

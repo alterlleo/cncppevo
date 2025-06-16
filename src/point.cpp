@@ -37,6 +37,7 @@ void Point::reset(){
 }
 
 
+/*
 void Point::modal(const Point &p){
 
   if(p._x && !_x)
@@ -51,6 +52,18 @@ void Point::modal(const Point &p){
   _x.value_or(p._x.value());    // it returns a value OR a default
   _y.value_or(p._y.value());
   _z.value_or(p._z.value());
+}
+*/
+void Point::modal(const Point &p){
+
+  if (!this->_x && p._x)
+    this->_x = p._x;
+
+  if (!this->_y && p._y)
+    this->_y = p._y;
+
+  if (!this->_z && p._z)
+    this->_z = p._z;
 }
 
 

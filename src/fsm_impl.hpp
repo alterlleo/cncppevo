@@ -149,8 +149,8 @@ state_t do_load_block(T &data) {
 
   // step 2 -> check block type
   auto &b = *data.program.current();
-  cerr << "Loading " << b.desc() << endl;
-  switch(b.type()){
+  cerr << "Loading " << b -> desc() << endl;
+  switch(b -> type()){
 
     case Block::BlockType::NO_MOTION:
       next_state = STATE_NO_MOTION;
@@ -220,7 +220,7 @@ state_t do_no_motion(T &data) {
   // STEPS
   // step 1 -> print that we are not moving
 
-  cerr << fg::yellow << "No motion block: " << fg::reset << data.program.current() -> desc() << endl;
+  cerr << fg::yellow << "No motion block: " << fg::reset << (*data.program.current()) -> desc() << endl;
 
   // step 2 -> increment timers
   data.t_tot += data.machine.tq();
@@ -236,7 +236,7 @@ state_t do_rapid_motion(T &data) {
   state_t next_state = cncpp::NO_CHANGE;
 
   data_t duration;
-  Block &b = *data.program.current();
+  Block &b = **data.program.current();
 
   try{
     // STEPS 
@@ -287,7 +287,7 @@ state_t do_interp_motion(T &data) {
   state_t next_state = cncpp::NO_CHANGE;
   /* Your Code Here */
 
-  Block &b = *data.program.current();
+  Block &b = **data.program.current();
   data_t lambda, speed;
   data_t tq = data.machine.tq();
 
@@ -359,7 +359,7 @@ template<class T>
 void begin_rapid(T &data) {
 
 
-  Block &b = *data.program.current();
+  Block &b = **data.program.current();
   data.t_blk = 0.0;
   data.machine.listen_start();
   data.machine.setpoint(b.target());

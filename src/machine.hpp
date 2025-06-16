@@ -181,7 +181,7 @@ namespace cncpp{
       data_t _max_error = 0.005;          // maximum allowable error -> 5 micrometers
 
       vector<data_t> _tools;
-      int _selected_tool;
+      int _selected_tool = 0;
 
       string _mqtt_host = "localhost";    // broker running on the same machine (our assumption)
       int _mqtt_port = 1883;
