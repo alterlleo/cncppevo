@@ -67,19 +67,22 @@ void Program::load(const string &f, bool append){
     *this << line;
     back() -> desc();
 
+    Point start = back() -> start_point();
+
     BlockTRC* pr = dynamic_cast<BlockTRC*>(back()->prev);
     if(pr && pr -> trc()){
 
-      cerr << "check shift" << endl;
       back() -> desc();
 
+      cerr << "canonical starting point" << start.desc() << " ";
       back() -> shift_prev_target();
+      cerr << "modified previous target " << back() -> prev -> target().desc() << endl;
     }
 
     if(back() -> shaping()){
       
       list<BlockTRC*>::iterator iter = (prev(this -> end()));
-      string arc = back() -> arc_shaping();
+      string arc = back() -> arc_shaping(start);
       cerr << arc << endl;
       
       BlockTRC *pr_tmp = dynamic_cast<BlockTRC*>(back() -> prev);

@@ -116,7 +116,6 @@ BlockTRC &BlockTRC::parse(const Machine *m){
       _trc = true;
 
       _shaping_required = is_shaping_needed(); 
-      cerr << "check shaping required" << endl;     
     
     default:
       break;
@@ -169,7 +168,6 @@ void BlockTRC::shift_prev_target(){
 
       } else if (p -> type() == BlockType::LINE && (type() == BlockType::CWA || type() == BlockType::CCWA)) {
         
-        cerr << "2 check " << endl;
         line_arc_shift(p);
       
       } else if ((p -> type() == BlockType::CWA || p -> type() == BlockType::CCWA ) && type() == BlockType::LINE){
@@ -179,7 +177,6 @@ void BlockTRC::shift_prev_target(){
       }
   }
 
-  cerr << "check shifting" << endl;
 }
 
 void BlockTRC::line_line_shift(BlockTRC *prev){
@@ -258,9 +255,6 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
       normal.scale(-1);
     }
 
-    cerr << "check here " << normal.desc() << endl;
-    cerr << p -> target().desc();
-
     normal.scale(r);
 
     cerr << p -> target().desc();
@@ -273,8 +267,6 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
     data_t xd = (p -> target() + normal).x();
     data_t yd = (p -> target() + normal).y();
     cerr << xd << " " << yd << endl;
-
-        cerr << "check here " << endl;
 
     p -> update_target(xd, yd); 
     cerr << style::italic << "New target from TRC while angle > PI: " << endl <<  p -> desc() << style::reset << endl << endl;
@@ -322,7 +314,9 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
 
 }
 
-string BlockTRC::arc_shaping() {
+string BlockTRC::arc_shaping(Point nominal_start) {
+
+  data_t r = _machine->machine_tool_radius();
 
   _shaping_required = false;
 
@@ -330,8 +324,22 @@ string BlockTRC::arc_shaping() {
   const Point p1 = target();
   const Point pm = prev->start_point();
 
+  cerr << nominal_start.desc() << "          ";
+
+  // shift current starting point
+  Point tmp = p1.delta(nominal_start);
+  tmp.scale(1/tmp.length());
+  Point normal_tmp(-tmp.y(), tmp.x(), tmp.z());
+  if (_trc_type == TRCType::RIGHT)
+    normal_tmp.scale(-1);
+
+  normal_tmp.scale(r);
+  nominal_start = nominal_start + normal_tmp;
+
+  cerr << nominal_start.desc();
+
   Point v1 = p0.delta(pm);
-  Point v2 = p1.delta(p0);
+  Point v2 = p1.delta(nominal_start);
   v1.scale(1 / v1.length());
   v2.scale(1 / v2.length());
 
@@ -344,7 +352,6 @@ string BlockTRC::arc_shaping() {
     normal.scale(-1);
   }
 
-  data_t r = _machine->machine_tool_radius();
   normal.scale(r);
   Point arc_center = p0 + normal;
 
@@ -358,7 +365,7 @@ string BlockTRC::arc_shaping() {
   std::string arc_line = fmt::format(
     "G{:02d} X{:.3f} Y{:.3f} I{:.3f} J{:.3f} F{:.0f}",
     arc_code,
-    p0.x(), p0.y(),
+    nominal_start.x(), nominal_start.y(),
     i, j,
     _feedrate
   );
