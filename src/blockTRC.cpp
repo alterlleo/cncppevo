@@ -295,8 +295,8 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
   data_t comp_r = _r + r;                 // compensated radius
 
   // line equation y = mx + c
-  data_t m = (tp.y() - sp.y()) / (tp.x() - tp.y());
-  data_t h = sp.y() / (m * sp.x());
+  data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
+  data_t h = sp.y() - (m * sp.x());
 
   // paramters for intersection with circle
   data_t cy = _center.y();
@@ -328,13 +328,55 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
 }
 
 void BlockTRC::arc_line_shift(BlockTRC *p){
-  Point sp = p -> start_point();
-  Point tp = p -> target();
+
   data_t r = _machine -> machine_tool_radius(); 
+
+  Point tp = target();
+  Point vec = tp.delta(start_point());
+  vec.scale(1 / vec.length());
+
+  Point normal(-vec.y(), vec.x(), vec.z());
+  normal.scale(r);
+
+  // the starting point of the current line must be offset for TRC. The target is not important because the intersection point with the circle is the same
+
+  Point sp = start_point() + normal;
 
   cerr << style::italic << "Starting TRC arc-line between: " << endl << style::reset << this -> desc();
   cerr << style::italic << "And previous move: " << style::reset << endl;
   cerr << style::italic << p -> desc() << style::reset << endl;
+
+  data_t rad = p -> _r;
+
+  // line equation y = mx + c
+  data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
+  data_t h = sp.y() - (m * sp.x());
+
+  // paramters for intersection with circle
+  data_t cy = (p -> _center).y();
+  data_t cx = (p -> _center).x();
+  data_t b = 2 * (m * h - m * cy - cx);
+  data_t a = (pow(m, 2) + 1);
+  data_t c = pow(cy, 2) - pow(rad, 2) + pow(cx, 2) - 2 * h * cy + pow(h, 2);
+
+  // intersection coordinates declaration
+  data_t ix;
+  data_t iy;
+
+  data_t delta = sqrt(pow(b, 2) - 4 * a * c);
+  if(delta > 0){
+
+    data_t tmp1 = (-b + delta) / (2 * a);
+    data_t tmp2 = (-b - delta) / (2 * a);
+
+    // find the narrower solution to tp
+    ix = (fabs(tmp1 - tp.x()) < fabs(tmp2 - tp.x())) ? tmp1 : tmp2;
+    iy = m * ix + h;    
+  }
+
+  p -> update_target(ix, iy);
+  p -> _delta = p -> _target.delta(p -> start_point());
+  p -> calc_arc();    // need to update all
 
 }
 

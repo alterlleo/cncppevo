@@ -494,7 +494,13 @@ void Block::calc_arc() {
     data_t dx = _delta.x();
     data_t dy = _delta.y();
     data_t dxy2 = pow(dx, 2) + pow(dy, 2);
-    data_t sq = sqrt(-pow(dy, 2) * dxy2 * (dxy2 - 4 * _r * _r));
+    data_t delta = -pow(dy, 2) * dxy2 * (dxy2 - 4 * _r * _r);
+
+    if (delta < 0) {
+      throw CNCError("Invalid trajectory", this);
+    }
+    
+    data_t sq = sqrt(delta);
     // signs table
     // sign(r) | CW(-1) | CCW(+1)
     // --------------------------
