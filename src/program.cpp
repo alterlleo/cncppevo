@@ -67,36 +67,44 @@ void Program::load(const string &f, bool append){
     *this << line;
     back() -> desc();
 
-    Point start = back() -> start_point();
+    Point start;
 
-    BlockTRC* pr = dynamic_cast<BlockTRC*>(back()->prev);
-    if(pr && pr -> trc()){
+    if(back() -> prev){
 
-      back() -> desc();
+      BlockTRC* second_to_last = dynamic_cast<BlockTRC*>(back() -> prev);
+      start = second_to_last -> start_point();
 
-      cerr << "canonical starting point" << start.desc() << " ";
-      back() -> shift_prev_target();
-      cerr << "modified previous target " << back() -> prev -> target().desc() << endl;
-    }
+      if(second_to_last -> trc()){
 
-    if(back() -> shaping()){
-      
-      list<BlockTRC*>::iterator iter = (prev(this -> end()));
-      string arc = back() -> arc_shaping(start);
-      cerr << arc << endl;
-      
-      BlockTRC *pr_tmp = dynamic_cast<BlockTRC*>(back() -> prev);
+        back() -> shift_prev_target();
 
-      BlockTRC *corner = new BlockTRC(arc, pr_tmp);
-      // corner -> set_shaping_corner();
+        if(second_to_last-> prev && second_to_last -> shaping()){
+          
+          list<BlockTRC*>::iterator iter = end();
+          --iter;
+          --iter;
 
-      // inception of a new block means that the (last - 1) prev pointer poisnt to last-2, adn the last prev pointer must point to the new arc added
-      back() -> prev = corner;
-      corner -> next = back();
+          string arc = second_to_last -> arc_shaping(start);
+          cerr << arc << endl;
+          
+          BlockTRC *prpr_tmp = dynamic_cast<BlockTRC*>(second_to_last -> prev);
 
-      this -> insert(iter, corner);
-      corner -> parse(_machine);
-      // *this << back() -> arc_shaping();
+          BlockTRC *corner = new BlockTRC(arc, prpr_tmp);
+
+          // corner -> set_shaping_corner();
+
+          // draft idea:
+          // the new arc must be added between the third to last and the second to last block. This is because if it's added between second to last and the last, the target move of the last block is not eventually shifted yet. That means that the narrower frozen position are located from second to last to behind
+          second_to_last -> prev = corner;
+          corner -> next = second_to_last;
+          prpr_tmp -> next = corner;
+
+
+          this -> insert(iter, corner);
+          corner -> parse(_machine);
+          // *this << back() -> arc_shaping();
+        }
+      }
     }
   }
 

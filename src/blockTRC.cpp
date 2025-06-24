@@ -160,21 +160,23 @@ void BlockTRC::shift_prev_target(){
 
   BlockTRC *p = dynamic_cast<BlockTRC*>(prev);
 
-  if(p -> trc() /*|| p -> shaping_corner()*/){
+  if(p -> trc()){
     
     if (p -> type() == BlockType::LINE && type() == BlockType::LINE) {
 
-        line_line_shift(p);
+      line_line_shift(p);
 
-      } else if (p -> type() == BlockType::LINE && (type() == BlockType::CWA || type() == BlockType::CCWA)) {
-        
-        line_arc_shift(p);
+    } else if (p -> type() == BlockType::LINE && (type() == BlockType::CWA || type() == BlockType::CCWA)) {
       
-      } else if ((p -> type() == BlockType::CWA || p -> type() == BlockType::CCWA ) && type() == BlockType::LINE){
+      line_arc_shift(p);
+    
+    } else if ((p -> type() == BlockType::CWA || p -> type() == BlockType::CCWA ) && type() == BlockType::LINE){
 
-        // TODO
+      arc_line_shift(p);
 
-      }
+    }
+
+    p -> compute();
   }
 
 }
@@ -190,7 +192,7 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
 
   Point sp = p -> start_point();                // starting point of the previous block
   Point tp = p -> target();                     // target point of the previous block
-  Point sc = start_point();                     // starting point of the current block
+  Point sc = tp;                                // starting point of the current block
   Point tc = target();                          // target point of the current block
   data_t r = _machine -> machine_tool_radius(); // current tool radius
 
@@ -198,9 +200,9 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
   cerr << style::italic << "And previous move: " << style::reset << endl;
   cerr << style::italic << p -> desc() << style::reset << endl << endl;
 
-  // TODO : when angle > pi, then offset it's enough, no intersections because there is arc_shaping
-
   if(!is_shaping_needed()){
+
+    cerr << "check not shaping" << endl;
 
     Point v1 = tp.delta(sp);
     Point v2 = tc.delta(sc);
@@ -214,17 +216,19 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
     data_t b2 = tc.y() - a2 * tc.x();
 
     data_t offset_side = (p -> _trc_type == TRCType::LEFT) ? 1.0 : -1.0;
-    data_t offset_value = offset_side * r * sqrt(1 + pow(a1, 2));
-    b1 += offset_value;
-    b2 += offset_value;
+    data_t offset_value1 = offset_side * r * sqrt(1 + pow(a1, 2));
+    data_t offset_value2 = offset_side * r * sqrt(1 + pow(a2, 2));
+
+    b1 += offset_value1;
+    b2 += offset_value2;
 
     data_t xd = 0, yd = 0;
 
     // intersection
-    if(fabs(a1 - a2) > 1e-8){
+    if(fabs(a1 - a2) > 0){
 
       xd = (b2 - b1) / (a1 - a2);
-      yd = a1 * xd + b1;
+      yd = (b1 * a2 - b2 * a1) / (a2 - a1);
 
     } else{ // no intersection, parallel lines
 
@@ -236,11 +240,8 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
       xd = (p -> target() + normal).x();
       yd = (p -> target() + normal).y();
 
-      cerr << xd << endl;
-      cerr << yd << endl;
     }
     
-
     p -> update_target(xd, yd);
     cerr << style::italic << "New target from TRC while angle < PI: " << endl <<  p -> desc() << style::reset << endl << endl;
 
@@ -257,13 +258,12 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
 
     normal.scale(r);
 
-    cerr << p -> target().desc();
-
     if (!p->target().is_complete()) {
       throw CNCError("Target point incomplete", this);
       return;
     }
 
+    // if the junction arc is required, then just shift normally the target
     data_t xd = (p -> target() + normal).x();
     data_t yd = (p -> target() + normal).y();
     cerr << xd << " " << yd << endl;
@@ -272,6 +272,11 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
     cerr << style::italic << "New target from TRC while angle > PI: " << endl <<  p -> desc() << style::reset << endl << endl;
  
   }
+
+
+  // update delta without reparsing
+  p -> _delta = p -> _target.delta(p -> start_point());
+
 }
 
 
@@ -314,23 +319,37 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
 
 }
 
+void BlockTRC::arc_line_shift(BlockTRC *p){
+  Point sp = p -> start_point();
+  Point tp = p -> target();
+  data_t r = _machine -> machine_tool_radius(); 
+
+  cerr << style::italic << "Starting TRC arc-line between: " << endl << style::reset << this -> desc();
+  cerr << style::italic << "And previous move: " << style::reset << endl;
+  cerr << style::italic << p -> desc() << style::reset << endl;
+
+}
+
 string BlockTRC::arc_shaping(Point nominal_start) {
 
   data_t r = _machine->machine_tool_radius();
 
   _shaping_required = false;
 
-  const Point p0 = prev->target();
-  const Point p1 = target();
-  const Point pm = prev->start_point();
+  const Point p0 = prev -> prev -> target();
+  const Point p1 = prev -> target();
+  const Point pm = prev -> prev -> start_point();
 
-  cerr << nominal_start.desc() << "          ";
+  cerr << "\t \t arc shaping betwee: " << endl;
+  cerr << "\t \t \t" << p0.desc() << endl;
+  cerr << "\t \t \t" << p1.desc() << endl;
+  cerr << "\t \t \t" << pm.desc() << endl;
 
   // shift current starting point
   Point tmp = p1.delta(nominal_start);
   tmp.scale(1/tmp.length());
   Point normal_tmp(-tmp.y(), tmp.x(), tmp.z());
-  if (_trc_type == TRCType::RIGHT)
+  if (dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT)
     normal_tmp.scale(-1);
 
   normal_tmp.scale(r);
@@ -348,9 +367,8 @@ string BlockTRC::arc_shaping(Point nominal_start) {
   bisector.scale(1 / bisector.length());
 
   Point normal(-bisector.y(), bisector.x(), bisector.z());
-  if (_trc_type == TRCType::RIGHT) {
+  if (dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT)
     normal.scale(-1);
-  }
 
   normal.scale(r);
   Point arc_center = p0 + normal;
@@ -504,7 +522,7 @@ data_t BlockTRC::angle_with_prev(){
     return 0.0;
 
   Point p0 = this -> prev -> start_point();
-  Point p1 = this -> prev -> target();
+  Point p1 = this -> start_point();
   Point p2 = this -> target();
 
   Point v1 = p1.delta(p0);
@@ -516,25 +534,20 @@ data_t BlockTRC::angle_with_prev(){
   data_t cross = v1.x() * v2.y() - v1.y() * v2.x();
   data_t omega = atan2(cross, tmp1 + tmp2); 
 
-  cerr << "omega: " << omega << endl;
-
   return omega;
 
 }
 
 bool BlockTRC::is_shaping_needed(){
-  if(angle_with_prev() > 0 && _trc_type == TRCType::LEFT){
+
+  if(angle_with_prev() > 0 && _trc_type == TRCType::RIGHT){
 
     return true;
-  } else if (angle_with_prev() > 0 && _trc_type == TRCType::RIGHT){
 
-    return false;
   } else if (angle_with_prev() < 0 && _trc_type == TRCType::LEFT){
 
-    return false;
-  } else if (angle_with_prev() < 0 && _trc_type == TRCType::RIGHT){
-
     return true;
+
   } else{
 
     return false;

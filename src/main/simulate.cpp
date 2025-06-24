@@ -74,9 +74,18 @@ int main(int argc, char *argv[]){
   Point pos;
 
   // before the tabled data, we must print the columns name
-  // cout << "n,type,t_tot,t,lambda,feedrate,X,Y,Z" << endl;
+  cout << "n,type,t_tot,t,lambda,feedrate,X,Y,Z" << endl;
+
+  int count = 0;
 
   for(auto &b : program){
+
+/*
+    if(count != 0){
+      cerr << "check correct order of blocks: " << endl;
+      cerr << b -> desc() << " THAT STARTS FROM " << b -> prev -> desc() << endl;
+    }
+*/
 
     // check blocktype in order to skip the rapid block
     if(b -> type() == bt::RAPID || b -> type() == bt::NO_MOTION){
@@ -93,9 +102,13 @@ int main(int argc, char *argv[]){
       t_tot += machine.tq();
 
       // CSV format
-      // cout << format("{:},{:},{:.3f},{:.3f},{:.6f},{:.3f},{:.3f},{:.3f},{:.3f}", b.n(), b.type_name(), t_tot, t, lambda, feedrate, pos.x(), pos.y(), pos.z()) << endl;
+      cout << format("{:},{:},{:.3f},{:.3f},{:.6f},{:.3f},{:.3f},{:.3f},{:.3f}", b.n(), b.type_name(), t_tot, t, lambda, feedrate, pos.x(), pos.y(), pos.z()) << endl;
+
+      count = 1;
 
     });
+
+    cerr << b -> target().desc() << endl;
   }
 
   cerr << style::bold << "Done" << style::reset << endl;

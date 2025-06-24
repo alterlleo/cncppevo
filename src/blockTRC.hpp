@@ -93,6 +93,7 @@ namespace cncpp{
 
       void line_line_shift(BlockTRC *p);
       void line_arc_shift(BlockTRC *p);
+      void arc_line_shift(BlockTRC *p);
 
       bool is_shaping_needed();
 
@@ -103,7 +104,16 @@ namespace cncpp{
       bool _shaping_required = false;
       bool _shaping_corner = false;
 
+      /**
+       * 
+       * @brief it compute the angle between the current move and the previous one. It uses the atan2 of the cross product and the dot product. The resulting angle is included in the range [-pi pi] and:
+       * -- it is > 0 if the angle between the previous and the current move is CCW
+       * -- it is < 0 if the angle between the previous and the current move is CW
+       * -- 0 if the segments are collinear
+       * 
+       */
       data_t angle_with_prev();
+
       void parse_token(string token);
 
   };
