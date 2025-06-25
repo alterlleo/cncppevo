@@ -33,9 +33,9 @@ const map<BlockTRC::TRCType, string> BlockTRC::trc_types = {
 
 BlockTRC::BlockTRC(string line) : Block(line), _trc(false) {}
 
-BlockTRC::BlockTRC(string line, BlockTRC &prev) : Block(line, prev), _trc(false) {}
+BlockTRC::BlockTRC(string line, BlockTRC &prev) : Block(line, prev), _trc(prev.trc()), _trc_type(prev._trc_type) {}
 
-BlockTRC::BlockTRC(string line, BlockTRC *b) : Block(line, b), _trc(false) {}
+BlockTRC::BlockTRC(string line, BlockTRC *b) : Block(line, b), _trc(b -> trc()), _trc_type(dynamic_cast<BlockTRC*>(prev) -> _trc_type) {}
 
 BlockTRC::~BlockTRC(){}
 
@@ -57,7 +57,7 @@ BlockTRC &BlockTRC::parse(const Machine *m){
 
     try{
 
-      parse_token(token);
+      if(!parse_token(token)) break;
     
     } catch(CNCError &e){
 
@@ -175,6 +175,9 @@ void BlockTRC::shift_prev_target(){
 
       arc_line_shift(p);
 
+    } else if ((p -> type() == BlockType::CWA || p -> type() == BlockType::CCWA ) && (type() == BlockType::CWA || type() == BlockType::CCWA )){
+
+      arc_arc_shift(p);
     }
 
     p -> compute();
@@ -211,36 +214,68 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
     v2.scale(1 / v2.length());
 
     // find line parameters
-    data_t a1 = v1.y() / v1.x();
-    data_t a2 = v2.y() / v2.x();
-    data_t b1 = tp.y() - a1 * tp.x();
-    data_t b2 = tc.y() - a2 * tc.x();
-
     data_t offset_side = (p -> _trc_type == TRCType::LEFT) ? 1.0 : -1.0;
-    data_t offset_value1 = offset_side * r * sqrt(1 + pow(a1, 2));
-    data_t offset_value2 = offset_side * r * sqrt(1 + pow(a2, 2));
-
-    b1 += offset_value1;
-    b2 += offset_value2;
-
     data_t xd = 0, yd = 0;
 
-    // intersection
-    if(fabs(a1 - a2) > 0){
+    // previous line is vertical
+    if(v1.x() == 0 || v2.x() == 0){
 
-      xd = (b2 - b1) / (a1 - a2);
-      yd = (b1 * a2 - b2 * a1) / (a2 - a1);
+      Point v2_norm(-v2.y(), v2.x(), v2.z());
+      v2_norm.scale(1 / v2_norm.length());
 
-    } else{ // no intersection, parallel lines
+      if(v1.x() == 0){
+        
+        data_t a2 = v2.y() / v2.x();
+        data_t b2 = tc.y() - a2 * tc.x();
+        data_t offset_value2 = offset_side * r * sqrt(1 + pow(a2, 2));
+        b2 += offset_value2;
 
-      Point normal(-v1.y(), v1.x());
-      if (p->_trc_type == TRCType::RIGHT)
-        normal.scale(-1);
+        xd = -offset_side * r + sp.x();
+        yd = a2 * xd + b2;
 
-      normal.scale(r);  // offset direction by tool radius
-      xd = (p -> target() + normal).x();
-      yd = (p -> target() + normal).y();
+      } else if(v2.x() == 0){
 
+        data_t a1 = v1.y() / v1.x();
+        data_t b1 = tp.y() - a1 * tp.x();
+        data_t offset_value1 = -offset_side * r * sqrt(1 + pow(a1, 2));
+        b1 += offset_value1;
+
+        xd = - offset_side * r + sc.x();
+        yd = a1 * xd + b1;
+      
+      }  
+    
+    } else{
+      
+      data_t a1 = v1.y() / v1.x();
+      data_t a2 = v2.y() / v2.x();
+      data_t b1 = tp.y() - a1 * tp.x();
+      data_t b2 = tc.y() - a2 * tc.x();
+
+      data_t offset_value1 = offset_side * r * sqrt(1 + pow(a1, 2));
+      data_t offset_value2 = offset_side * r * sqrt(1 + pow(a2, 2));
+
+      b1 += offset_value1;
+      b2 += offset_value2;
+
+      // intersection
+
+      if(fabs(a1 - a2) > 0){
+
+        xd = (b2 - b1) / (a1 - a2);
+        yd = (b1 * a2 - b2 * a1) / (a2 - a1);
+
+      } else{ // no intersection, parallel lines
+
+        Point normal(-v1.y(), v1.x(), v1.z());
+        if (p->_trc_type == TRCType::RIGHT)
+          normal.scale(-1);
+
+        normal.scale(r);  // offset direction by tool radius
+        xd = (p -> target() + normal).x();
+        yd = (p -> target() + normal).y();
+
+      }
     }
     
     p -> update_target(xd, yd);
@@ -274,7 +309,6 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
  
   }
 
-
   // update delta without reparsing
   p -> _delta = p -> _target.delta(p -> start_point());
 
@@ -292,39 +326,55 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
   cerr << style::italic << "And previous move: " << style::reset << endl;
   cerr << style::italic << p -> desc() << style::reset << endl;
 
-  data_t comp_r = _r + r;                 // compensated radius
+  data_t side = (p -> _trc_type == TRCType::RIGHT) ? 1 : -1;
+  side = (p -> type() == BlockType::CCWA) ? 1 : -1;
 
-  // line equation y = mx + c
-  data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
-  data_t h = sp.y() - (m * sp.x());
-
-  // paramters for intersection with circle
-  data_t cy = _center.y();
-  data_t cx = _center.x();
-  data_t b = 2 * (m * h - m * cy - cx);
-  data_t a = (pow(m, 2) + 1);
-  data_t c = pow(cy, 2) - pow(comp_r, 2) + pow(cx, 2) - 2 * h * cy + pow(h, 2);
+  data_t comp_r = _r - side * r;                 // compensated radius
 
   // intersection coordinates declaration
   data_t ix;
   data_t iy;
 
-  data_t delta = sqrt(pow(b, 2) - 4 * a * c);
-  if(delta > 0){
+  // line equation y = mx + c only if the line is not vertical
+  if(tp.x() + r - sp.x() != 0){
 
-    data_t tmp1 = (-b + delta) / (2 * a);
-    data_t tmp2 = (-b - delta) / (2 * a);
+    data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
+    data_t h = sp.y() - (m * sp.x());
 
-    // find the narrower solution to tp
-    ix = ((tmp1 - tp.x() < tmp2 - tp.x())) ? tmp1 : tmp2;
-    iy = m * ix + h;    
+    // paramters for intersection with circle
+    data_t cy = _center.y();
+    data_t cx = _center.x();
+    data_t b = 2 * (m * h - m * cy - cx);
+    data_t a = (pow(m, 2) + 1);
+    data_t c = pow(cy, 2) - pow(comp_r, 2) + pow(cx, 2) - 2 * h * cy + pow(h, 2);
+
+    data_t delta = sqrt(pow(b, 2) - 4 * a * c);
+    if(delta > 0){
+
+      data_t tmp1 = (-b + delta) / (2 * a);
+      data_t tmp2 = (-b - delta) / (2 * a);
+
+      // find the narrower solution to tp
+      ix = ((tmp1 - tp.x() < tmp2 - tp.x())) ? tmp1 : tmp2;
+      iy = m * ix + h;    
+    }
+
+  } else{
+
+    ix = sp.x();
+
+    data_t delta = sqrt(pow(comp_r, 2) - pow((ix - _center.x()), 2));
+    iy = _center.y();
+
+    iy = (iy + delta > tp.y()) ? iy - delta : iy + delta;
   }
 
   p -> update_target(ix, iy);
   p -> _delta = p -> _target.delta(p -> start_point());
-
+  _delta = (_target).delta( start_point());
   set_r(comp_r);
 
+  calc_arc();    // need to update all
 }
 
 void BlockTRC::arc_line_shift(BlockTRC *p){
@@ -332,15 +382,20 @@ void BlockTRC::arc_line_shift(BlockTRC *p){
   data_t r = _machine -> machine_tool_radius(); 
 
   Point tp = target();
+  cerr << tp.desc() << " and sp: " << start_point().desc() << endl;
   Point vec = tp.delta(start_point());
   vec.scale(1 / vec.length());
 
   Point normal(-vec.y(), vec.x(), vec.z());
+  if (dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT)
+    normal.scale(-1);
+
   normal.scale(r);
 
   // the starting point of the current line must be offset for TRC. The target is not important because the intersection point with the circle is the same
 
   Point sp = start_point() + normal;
+  tp = tp + normal;
 
   cerr << style::italic << "Starting TRC arc-line between: " << endl << style::reset << this -> desc();
   cerr << style::italic << "And previous move: " << style::reset << endl;
@@ -349,6 +404,7 @@ void BlockTRC::arc_line_shift(BlockTRC *p){
   data_t rad = p -> _r;
 
   // line equation y = mx + c
+  cerr << "tp: " << tp.desc() << " sp: " << sp.desc() << endl;
   data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
   data_t h = sp.y() - (m * sp.x());
 
@@ -363,22 +419,72 @@ void BlockTRC::arc_line_shift(BlockTRC *p){
   data_t ix;
   data_t iy;
 
-  data_t delta = sqrt(pow(b, 2) - 4 * a * c);
+  data_t delta = pow(b, 2) - 4 * a * c;
+  cerr << "delta: " << delta << endl;
+  cerr << "m:" << m << " h:" << h << " cy:" << cy << " cx:" << cx << " a:" << a << " b:" << b << " c:" << c << endl;
+
   if(delta > 0){
+
+    delta = sqrt(delta);
 
     data_t tmp1 = (-b + delta) / (2 * a);
     data_t tmp2 = (-b - delta) / (2 * a);
 
     // find the narrower solution to tp
     ix = (fabs(tmp1 - tp.x()) < fabs(tmp2 - tp.x())) ? tmp1 : tmp2;
-    iy = m * ix + h;    
+    iy = m * ix + h;   
+
+    cerr << "ix: " << ix << ";   iy: " << iy << endl;
   }
 
   p -> update_target(ix, iy);
-  p -> _delta = p -> _target.delta(p -> start_point());
-  p -> calc_arc();    // need to update all
 
+  p -> _delta = (p -> _target).delta(p -> start_point());
+  p -> calc_arc();    // need to update all
 }
+
+
+void BlockTRC::arc_arc_shift(BlockTRC *p){
+
+  data_t dx = _center.x() - (p -> _center).x();
+  data_t dy = _center.y() - (p -> _center).y();
+
+  data_t dist = sqrt(pow(dx, 2) + pow(dy, 2));
+
+  data_t r = _machine -> machine_tool_radius();
+
+  if(trc()){
+    _r = _r + r;
+  }
+
+  if (dist > p -> _r + _r || dist < fabs(p -> _r - _r) || dist == 0) {
+    throw std::runtime_error("No intersection");
+  }
+
+  data_t r1 = p -> _r;
+  data_t r2 = _r;
+
+  data_t a = (r1*r1 - r2*r2 + pow(dist, 2)) / (2 * dist);
+  data_t h = sqrt(r1*r1 - a*a);
+
+  data_t px = _center.x() + a * (dx / dist);
+  data_t py = _center.y() + a * (dy / dist);
+
+  data_t rx = -dy * (h / dist);
+  data_t ry = dx * (h / dist);
+
+  Point i1(px + rx, py + ry, p -> target().z());
+  Point i2(px - rx, py - ry, p -> target().z());
+
+  data_t ix = ((i1.delta(p -> target())).x() < (i2.delta(p -> target())).x()) ? i1.x() : i2.x();
+  data_t iy = ((i1.delta(p -> target())).y() < (i2.delta(p -> target())).y()) ? i1.y() : i2.y();
+
+  p -> update_target(ix, iy);
+
+  p -> _delta = (p -> _target).delta(p -> start_point());
+  p -> calc_arc();    // need to update all
+}
+
 
 string BlockTRC::arc_shaping(Point nominal_start) {
 
@@ -426,6 +532,12 @@ string BlockTRC::arc_shaping(Point nominal_start) {
   return arc_line;
 }
 
+void arc_arc_shift(BlockTRC *p){
+
+
+}
+
+
 
 /*
   ____       _            _                        _   _               _     
@@ -436,11 +548,15 @@ string BlockTRC::arc_shaping(Point nominal_start) {
                                                                              
 */
 
-void BlockTRC::parse_token(string token){
+bool BlockTRC::parse_token(string token){
     // we want to support both capital and lower cases, let's put all capital
   char cmd = toupper(token[0]);   // token[0] is the first letter in the token
 
   string arg = token.substr(1);   // sub string that starts at the element
+
+  if(cmd == '#' || cmd == ';')
+    return false;
+
   if(arg.empty())
     throw CNCError("Empty command argument", this);
 
@@ -549,6 +665,8 @@ void BlockTRC::parse_token(string token){
     throw CNCError(ss.str(), this);
 
   }
+
+  return true;
 }
 
 

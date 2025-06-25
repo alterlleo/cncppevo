@@ -95,6 +95,7 @@ namespace cncpp{
       void line_line_shift(BlockTRC *p);
       void line_arc_shift(BlockTRC *p);
       void arc_line_shift(BlockTRC *p);
+      void arc_arc_shift(BlockTRC *p);
 
       bool is_shaping_needed();
 
@@ -115,7 +116,7 @@ namespace cncpp{
        */
       data_t angle_with_prev();
 
-      void parse_token(string token);
+      bool parse_token(string token);
 
   };
 }
