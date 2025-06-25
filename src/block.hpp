@@ -229,7 +229,7 @@ namespace cncpp{
        * @param token i-th line of the gcode
        * 
        */
-      void parse_token(string token);
+      bool parse_token(string token);
 
       /**
        * 

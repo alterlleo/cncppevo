@@ -193,7 +193,7 @@ Block &Block::parse(const Machine *m){
   while(ss >> token){       // when we reach the end of the string, the token is false. Each token is composed by the letter and the argument that is the number, so dependending on the letter the number has different meanings
     
     try{
-      parse_token(token);
+      if(!parse_token(token)) break;
     
     } catch(CNCError &e){
       stringstream ss;
@@ -321,12 +321,15 @@ void Block::update_target(data_t x, data_t y){
                                                                              
 */
 
-void Block::parse_token(string token){
+bool Block::parse_token(string token){
 
   // we want to support both capital and lower cases, let's put all capital
   char cmd = toupper(token[0]);   // token[0] is the first letter in the token
 
   string arg = token.substr(1);   // sub string that starts at the element
+  if (cmd == '#' || cmd == ';')
+    return false;
+
   if(arg.empty())
     throw CNCError("Empty command argument", this);
 
@@ -391,6 +394,8 @@ void Block::parse_token(string token){
     throw CNCError(ss.str(), this);
 
   }
+
+  return true;
 }
 
 
