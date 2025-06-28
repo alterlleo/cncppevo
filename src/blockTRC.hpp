@@ -82,7 +82,7 @@ namespace cncpp{
        * 
        */
       string arc_shaping(Point nominal_start);
-
+      
       string desc(bool colored = true) const override;
 
       /**
