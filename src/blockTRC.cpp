@@ -183,8 +183,7 @@ void BlockTRC::shift_prev_target(){
 
   }
 
-    p -> _delta = p -> _target.delta(p -> start_point());
-
+  p -> _delta = p -> _target.delta(p -> start_point());
   p -> compute();
 
 }
@@ -355,7 +354,7 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
     cerr << tp.desc() << endl;
   
 
-    if(!dynamic_cast<BlockTRC*>(p -> prev) -> trc())
+    if(!(dynamic_cast<BlockTRC*>(p -> prev) -> trc()))
       sp = sp + normal;
 
     data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
@@ -382,7 +381,9 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
     i = (fabs(i1.delta(tp).length()) < fabs(i2.delta(tp).length())) ? i1 : i2;
   }
 
+  cerr << "previous target: " << p -> target().desc();
   p -> update_target(i.x(), i.y());
+  cerr << "upadted target: " << p -> target().desc();
   p -> _delta = p -> _target.delta(p -> start_point());
   set_r(_r + side * r);
 }
@@ -420,9 +421,9 @@ void BlockTRC::arc_line_shift(BlockTRC *p){
     data_t ix = start_point().x() + side * r;
 
     data_t delta = pow(p -> _r, 2) - pow(ix - p -> _center.x(), 2);
-    if(delta < 0)
+    if(delta < 0) 
       throw CNCError("No interseciton between line and arc", this);
- 
+
     data_t iy1 = p -> _center.y() - sqrt(delta);
     data_t iy2 = p -> _center.y() + sqrt(delta);
 
@@ -430,7 +431,7 @@ void BlockTRC::arc_line_shift(BlockTRC *p){
     Point i2(ix, iy2);
 
     i = (fabs(i1.delta(p -> target()).length()) < fabs(i2.delta(p -> target()).length())) ? i1 : i2;
-  }
+    }
 
   p -> update_target(i.x(), i.y());
   cerr << "new arc target before line: " << p -> target().desc() << "with raidus" << p -> _r << endl;
@@ -472,7 +473,9 @@ void BlockTRC::arc_arc_shift(BlockTRC *p){
   cerr << "arc arc intersection: " << i.desc() << endl;
   p -> _delta = p -> _target.delta(p -> start_point());
   set_r(r2);
-  p -> calc_arc();
+
+  if(!((type() == BlockType::CCWA && p -> type() == BlockType::CWA) || (p -> type() == BlockType::CCWA && type() == BlockType::CWA)))
+    p -> calc_arc();
 
 }
 
@@ -518,6 +521,12 @@ string BlockTRC::arc_shaping(Point nominal_start) {
 
   _shaping_required = false;
 
+  if(type() == BlockType::LINE && prev -> type() == BlockType::LINE){
+
+    cerr << "SHAPING BETWEEN ARC AND LINE" << endl;
+    
+  }
+
   const Point p0 = prev -> target();
   const Point p1 = target();
   const Point pm = prev -> start_point();
@@ -555,6 +564,7 @@ string BlockTRC::arc_shaping(Point nominal_start) {
     _feedrate
   );
 
+  cerr << "junction arc: " << arc_line << endl;
   return arc_line;
 }
 
@@ -693,9 +703,9 @@ data_t BlockTRC::angle_with_prev(){
   if (!prev)
     return 0.0;
 
-  Point p0 = this -> prev -> start_point();
-  Point p1 = this -> start_point();
-  Point p2 = this -> target();
+  Point p0 = prev -> start_point();
+  Point p1 = start_point();
+  Point p2 = target();
 
   Point v1 = p1.delta(p0);
   Point v2 = p2.delta(p1);
@@ -706,11 +716,21 @@ data_t BlockTRC::angle_with_prev(){
   data_t cross = v1.x() * v2.y() - v1.y() * v2.x();
   data_t omega = atan2(cross, tmp1 + tmp2); 
 
+  cerr << "\t angle with prev: " << omega << endl;
+
   return omega;
 
 }
 
 bool BlockTRC::is_shaping_needed(){
+
+  if((prev -> type() == BlockType::CCWA && type() == BlockType::LINE) || (prev -> type() == BlockType::CWA && type() == BlockType::LINE)){
+
+    if(fabs(angle_with_prev()) < PI / 2)
+      return true;
+
+    return false;
+  }
 
   if(angle_with_prev() > 0 && _trc_type == TRCType::RIGHT){
 
@@ -724,6 +744,8 @@ bool BlockTRC::is_shaping_needed(){
 
     return false;
   }
+
+  return false;
 }
 
 #ifdef BLOCKTRC_MAIN

@@ -122,7 +122,6 @@ namespace cncpp{
 
       Point line_circle_intersection(Point c, data_t r, data_t m, data_t h, Point tp);
 
-
   };
 }
 
