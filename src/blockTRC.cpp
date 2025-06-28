@@ -181,8 +181,11 @@ void BlockTRC::shift_prev_target(){
       arc_arc_shift(p);
     }
 
-    p -> compute();
   }
+
+    p -> _delta = p -> _target.delta(p -> start_point());
+
+  p -> compute();
 
 }
 
@@ -316,15 +319,11 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
   }
 
   // update delta without reparsing
-  p -> _delta = p -> _target.delta(p -> start_point());
-
+  // p -> _delta = p -> _target.delta(p -> start_point());
 }
 
 
 void BlockTRC::line_arc_shift(BlockTRC *p){
-  Point sp = p -> start_point();
-  Point tp = p -> target();
-  data_t r = _machine -> machine_tool_radius(); 
 
   cerr << style::italic << "Starting TRC line-arc between: " << endl << style::reset << this -> desc() << endl;
   cerr << style::italic << "And previous move: " << style::reset << endl;
@@ -333,201 +332,115 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
   data_t side = (p -> _trc_type == TRCType::RIGHT) ? 1 : -1;
   side = (type() == BlockType::CCWA) ? side : -side;
 
-  data_t comp_r = _r + side * r;                 // compensated radius
+  // intersection declaration
+  Point i;
 
-  // intersection coordinates declaration
-  data_t ix;
-  data_t iy;
+  Point sp = p -> start_point();
+  Point tp = p -> target();
+  data_t r = _machine -> machine_tool_radius();
 
-  Point vec = tp.delta(sp);
-  Point normal(-vec.y(), vec.x(), vec.z());
-  normal.scale(1 / vec.length());
-  normal.scale(side * r);
+  cerr << sp.x() << " " << tp.x() << endl;
 
-  if(tp.x() + r - sp.x() != 0){
+  if(!(fabs(sp.x() - tp.x() - r) < 0.000001)){
+
+    cerr << "check check check check" << endl;
+
+    Point vec = tp.delta(sp);
+    vec.scale(1 / length());
+    Point normal(-vec.y(), vec.x(), vec.z());
+    normal.scale(side * r);
+
+    cerr << tp.desc() << " ";
+    tp = tp + normal;
+    cerr << tp.desc() << endl;
+  
+
+    if(!dynamic_cast<BlockTRC*>(p -> prev) -> trc())
+      sp = sp + normal;
 
     data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
     data_t h = sp.y() - (m * sp.x());
 
-    data_t alpha = asin(r / comp_r);
-    data_t rel_scaling = comp_r * cos(alpha) - comp_r;
-    vec.scale(1 / vec.length());
-    vec.scale(rel_scaling);
-    
-    ix = tp.x() - side * vec.x();
-    iy = tp.y() - side * vec.y();
+    i = line_circle_intersection(_center, _r + side * r, m, h, tp);
 
-  } else{
+  } else{ // vertical line
 
-    ix = tp.x() + side * r;
+  cerr << "check check" << endl;
 
-    data_t delta = sqrt(pow(comp_r, 2) - pow((ix - _center.x()), 2));
-    iy = _center.y();
+    data_t ix = sp.x();
 
-    iy = (iy + delta < tp.y()) ? iy - delta : iy + delta;
+    data_t delta = pow(_r + side*r, 2) - pow(ix - _center.x(), 2);
+    if(delta < 0)
+      throw CNCError("No interseciton between line and arc", this);
+ 
+    data_t iy1 = _center.y() - sqrt(delta);
+    data_t iy2 = _center.y() + sqrt(delta);
+
+    Point i1(ix, iy1, tp.z());
+    Point i2(ix, iy2, tp.z());
+
+    i = (fabs(i1.delta(tp).length()) < fabs(i2.delta(tp).length())) ? i1 : i2;
   }
 
-  // line equation y = mx + c only if the line is not vertical
-  /*
-  if(tp.x() + r - sp.x() != 0){
+  p -> update_target(i.x(), i.y());
+  p -> _delta = p -> _target.delta(p -> start_point());
 
-    data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
-    data_t h = sp.y() - (m * sp.x());
-
-    // paramters for intersection with circle
-    data_t cy = _center.y();
-    data_t cx = _center.x();
-    data_t b = 2 * (m * h - m * cy - cx);
-    data_t a = (pow(m, 2) + 1);
-    data_t c = pow(cy, 2) - pow(comp_r, 2) + pow(cx, 2) - 2 * h * cy + pow(h, 2);
-
-    data_t delta = sqrt(pow(b, 2) - 4 * a * c);
-    if(delta > 0){
-
-      data_t tmp1 = (-b + delta) / (2 * a);
-      data_t tmp2 = (-b - delta) / (2 * a);
-
-      // find the narrower solution to tp
-      ix = ((tmp1 - tp.x() > tmp2 - tp.x())) ? tmp1 : tmp2;
-      iy = m * ix + h;    
-    }
-
-  } else{
-
-    ix = tp.x() + side * r;
-
-    data_t delta = sqrt(pow(comp_r, 2) - pow((ix - _center.x()), 2));
-    iy = _center.y();
-
-    iy = (iy + delta < tp.y()) ? iy - delta : iy + delta;
-  }*/
-
-  p -> update_target(ix, iy);
-  // p -> _delta = p -> _target.delta(p -> start_point());
-  // _delta = (_target).delta( start_point());
-  set_r(comp_r);
-
-  // calc_arc();    // need to update all
+  set_r(_r + side * r);
 }
 
 void BlockTRC::arc_line_shift(BlockTRC *p){
-
-  data_t r = _machine -> machine_tool_radius(); 
-  Point tp = target();
-
-  data_t side = (p -> _trc_type == TRCType::RIGHT) ? 1 : -1;
-  side = (p -> type() == BlockType::CCWA) ? side : -side;
-
-  data_t comp_r = p -> _r + side * r;
-  p -> set_r(comp_r);
-
-  Point vec = tp.delta(start_point());
-  vec.scale(1 / vec.length());
-  Point normal(-vec.y(), vec.x(), vec.z());
-  normal.scale(side * r);
-
-  // Point normal(-vec.y(), vec.x(), vec.z());
-  // if (dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT)
-  //   normal.scale(-1);
-
-  // normal.scale(r);
-
-  Point sp = start_point();
-  //Point sp = start_point() + normal;
-  // the starting point of the current line must be offset for TRC. The target is not important because the intersection point with the circle is the same
-
-  // cerr << "starting point starting point : " << sp.desc() << endl;
 
   cerr << style::italic << "Starting TRC arc-line between: " << endl << style::reset << this -> desc();
   cerr << style::italic << "And previous move: " << style::reset << endl;
   cerr << style::italic << p -> desc() << style::reset << endl;
 
-  // data_t side = (p -> _trc_type == TRCType::RIGHT) ? 1 : -1;
-  // side = (p -> type() == BlockType::CCWA) ? side : -side;
+  data_t r = _machine -> machine_tool_radius(); 
+  Point tp = p -> target();
 
-  // data_t rad = p -> _r + side * r; // - side * r;
-  // calc_arc();
+  data_t side = (p -> _trc_type == TRCType::RIGHT) ? 1 : -1;
+  side = (p -> type() == BlockType::CCWA) ? side : -side;
 
+  Point i;
 
-  // intersection coordinates declaration
-  data_t ix;
-  data_t iy;
+  if(!(fabs(start_point().x() - target().x()) < 0.000001)){
 
-  // do only if the line is not vertical
-  if(tp.x() - sp.x() != 0){
+    Point vec = target().delta(start_point());
+    vec.scale(1 / vec.length());
+    Point normal(-vec.y(), vec.x(), vec.z());
 
-    data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
-    data_t h = sp.y() - (m * sp.x());
+    Point sc = start_point() + normal;
+    Point tc = target() + normal;
 
-    data_t alpha = asin(r / comp_r);
-    data_t rel_scaling = comp_r * cos(alpha) - comp_r;
-    vec.scale(rel_scaling);
+    data_t m = (tc.y() - sc.y()) / (tc.x() - sc.x());
+    data_t h = sc.y() - m * sc.x();
 
-    sp = sp - normal;
+    i = line_circle_intersection(p -> _center, p -> _r, m, h, p -> target());
 
-    ix = sp.x() - side * vec.x();
-    iy = sp.y() - side * vec.y();
-    /*
-    data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
-    data_t h = sp.y() - (m * sp.x());
+  } else{ //vertical line
+    data_t ix = start_point().x() + side * r;
 
-    // paramters for intersection with circle
-    data_t cy = (p -> _center).y();
-    data_t cx = (p -> _center).x();
-    data_t b = 2 * (m * h - m * cy - cx);
-    data_t a = (pow(m, 2) + 1);
-    data_t c = pow(cy, 2) - pow(rad, 2) + pow(cx, 2) - 2 * h * cy + pow(h, 2);
+    data_t delta = pow(p -> _r, 2) - pow(ix - p -> _center.x(), 2);
+    if(delta < 0)
+      throw CNCError("No interseciton between line and arc", this);
+ 
+    data_t iy1 = p -> _center.y() - sqrt(delta);
+    data_t iy2 = p -> _center.y() + sqrt(delta);
 
-    data_t delta = pow(b, 2) - 4 * a * c;
-    cerr << "delta: " << delta << endl;
-    cerr << "m:" << m << " h:" << h << " cy:" << cy << " cx:" << cx << " a:" << a << " b:" << b << " c:" << c << endl;
+    Point i1(ix, iy1);
+    Point i2(ix, iy2);
 
-    if(delta >= 0){
-
-      delta = sqrt(delta);
-
-      data_t tmp1 = (-b + delta) / (2 * a);
-      data_t tmp2 = (-b - delta) / (2 * a);
-
-      Point i1(tmp1, m * tmp1 + h, tp.z());
-      Point i2(tmp2, m * tmp2 + h, tp.z());
-
-      Point i = (fabs(tp.delta(i1).length()) > fabs(tp.delta(i2).length())) ? i1 : i2;
-    
-
-      // find the narrower solution to tp
-      // ix = (fabs(tmp1 - tp.x()) > fabs(tmp2 - tp.x())) ? tmp1 : tmp2;
-      // iy = m * ix + h;   
-      ix = i.x();
-      iy = i.y();
-
-      cerr << "ix: " << ix << ";   iy: " << iy << endl;
-    
-    }
-
-
-  //ix = sp.x();
-  //iy = sp.y();
-*/
-  } else{
-
-    ix = _target.x() + side * r;
-    iy = p -> target().y() + side * r;
-
+    i = (fabs(i1.delta(p -> target()).length()) < fabs(i2.delta(p -> target()).length())) ? i1 : i2;
   }
-  
-  p -> update_target(ix, iy);
 
-  //p -> _delta = (p -> _target).delta(p -> start_point());
-  p -> set_r(comp_r);
-  //p -> calc_arc();    // need to update all
+  p -> update_target(i.x(), i.y());
+  cerr << "new arc target before line: " << p -> target().desc() << endl;
+  p -> _delta = p -> _target.delta(p -> start_point());
+  //p -> calc_arc();  
 
 }
 
 
 void BlockTRC::arc_arc_shift(BlockTRC *p){
-
-  data_t r = _machine -> machine_tool_radius(); 
 
   cerr << style::italic << "Starting TRC arc-arc between: " << endl << style::reset << this -> desc() << endl;
   cerr << style::italic << "And previous move: " << style::reset << endl;
@@ -536,13 +449,12 @@ void BlockTRC::arc_arc_shift(BlockTRC *p){
   data_t side = (p -> _trc_type == TRCType::RIGHT) ? 1 : -1;
   side = (p -> type() == BlockType::CCWA) ? side : -side;
 
-  data_t comp_r = _r + side * r;                 // compensated radius
-  data_t comp_r_p = p -> _r + side * r;
+  data_t r = _machine -> machine_tool_radius(); 
 
   Point c1 = p -> _center;
   Point c2 = _center;
-  data_t r1 = comp_r_p;
-  data_t r2 = comp_r;
+  data_t r1 = p -> _r;
+  data_t r2 = _r + side * r;
   data_t aa = 2 * c2.x() - 2 * c1.x();
   data_t bb = 2 * c2.y() - 2 * c1.y();
   data_t cc = pow(r1, 2) - pow(r2, 2) + pow(c2.x(), 2) - pow(c1.x(), 2) + pow(c2.y(), 2) - pow(c1.y(), 2);
@@ -550,23 +462,50 @@ void BlockTRC::arc_arc_shift(BlockTRC *p){
   data_t m = -aa / bb;
   data_t h = cc / bb;
 
-  Point vec(1, m, p -> target().z());
-  vec.scale(1 / vec.length());
-  vec.scale(side * r);
+  Point i = line_circle_intersection(c1, r1, m, h, p -> target());
+  data_t ix = i.x();
+  data_t iy = i.y();
 
-  data_t ix = p -> target().x() + side * vec.x();
-  data_t iy = p -> target().y() + side * vec.y();
-
-  cerr << "old arc target " << p -> target().desc() << endl;
   p -> update_target(ix, iy);
-  cerr << "new arc target " << p -> target().desc() << endl; 
+  p -> _delta = p -> _target.delta(p -> start_point());
+  set_r(r2);
+  //p -> calc_arc();
 
-  // p -> set_r(comp_r_p);
-  // p -> _delta = (p -> _target).delta(p -> start_point());
-  // p -> calc_arc();    // need to update all
+}
 
-  // _delta = (_target).delta( start_point());
-  //  calc_arc();
+Point BlockTRC::line_circle_intersection(Point cen, data_t r, data_t m, data_t h, Point tp){
+
+  data_t ix, iy;
+
+  data_t a = pow(m, 2) + 1;
+  data_t b = -2 * cen.x() + 2 * m * (h + cen.y());
+  data_t c = pow(cen.x(), 2) + pow(h - cen.y(), 2) - pow(r, 2);
+
+  data_t delta = pow(b, 2) - 4 * a * c;
+  cerr << "m:" << m << " h:" << h << " center in:" << cen.desc() << " rad:" << r << endl;
+
+  if(delta < 0){
+
+    throw CNCError("No line-arc intersection", this);
+  }
+    
+
+  data_t x1 = (-b - sqrt(delta)) / (2 * a);
+  data_t x2 = (-b + sqrt(delta)) / (2 * a);
+  
+  Point tmp1(x1, m * x1 + h, tp.z());
+  Point tmp2(x2, m * x2 + h, tp.z());
+
+  if(tmp1.delta(tp).length() < tmp2.delta(tp).length()){
+    ix = tmp1.x();
+    iy = tmp1.y();
+
+  } else{
+    ix = tmp2.x();
+    iy = tmp2.y();
+  }
+
+  return Point(ix, iy, tp.z());
 }
 
 
@@ -618,8 +557,8 @@ string BlockTRC::arc_shaping(Point nominal_start) {
 
 Point BlockTRC::circle_circle_intersection(const Point &c1, data_t r1, const Point &c2, data_t r2, Point pt, data_t side){
 
-  r1 = r1 + _machine -> machine_tool_radius();
-  r2 = r2 + _machine -> machine_tool_radius();
+  // r1 = r1 + _machine -> machine_tool_radius();
+  // r2 = r2 + _machine -> machine_tool_radius();
 
   // r2 = r2 + side * _machine -> machine_tool_radius();
   

@@ -120,6 +120,9 @@ namespace cncpp{
 
       bool parse_token(string token);
 
+      Point line_circle_intersection(Point c, data_t r, data_t m, data_t h, Point tp);
+
+
   };
 }
 
