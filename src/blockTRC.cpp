@@ -106,6 +106,20 @@ BlockTRC &BlockTRC::parse(const Machine *m){
   switch(_trc_type){
 
     case TRCType::NONE:
+
+      if(prev){
+        if(!last() && (dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::LEFT || dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT))
+          _last = true;
+         _trc_type = dynamic_cast<BlockTRC*>(prev) -> _trc_type;
+          _shaping_required = is_shaping_needed(); 
+
+          if(last() && !last2() && (dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::LEFT || dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT))
+          _last2 = true;
+         _trc_type = dynamic_cast<BlockTRC*>(prev) -> _trc_type;
+          _shaping_required = is_shaping_needed(); 
+
+      }
+
       _trc = false;
       break;
 
@@ -160,7 +174,7 @@ void BlockTRC::shift_prev_target(){
 
   BlockTRC *p = dynamic_cast<BlockTRC*>(prev);
 
-  if(p -> trc()){
+  if(trc() || last() || last2()){
     
     if (p -> type() == BlockType::LINE && type() == BlockType::LINE) {
 
@@ -236,18 +250,23 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
         yd = a2 * xd + b2;
 
       } else if(v2.x() == 0){
-
+        
         data_t a1 = v1.y() / v1.x();
         data_t b1 = tp.y() - a1 * tp.x();
 
         data_t offset_value1 = offset_side * r * sqrt(1 + pow(a1, 2));
         offset_value1 = (sp.x() > sc.x()) ? -offset_value1 : offset_value1;
-        
+
         b1 += offset_value1;
 
         xd = -offset_side * r + sc.x();
-        yd = a1 * xd + b1;
-      
+        yd = a1 * xd + b1; 
+
+        if(fabs(p -> target().x() + offset_side * r - p -> start_point().x()) < 0.000001){
+
+          yd = p -> target().y();
+          xd = p -> target().x() + offset_side * r;
+        }       
       }  
     
     } else{
@@ -309,8 +328,7 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
     data_t yd = (p -> target() + normal).y();
 
     p -> update_target(xd, yd); 
- 
-  }
+  } 
 
 }
 
@@ -374,11 +392,11 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
 
 void BlockTRC::arc_line_shift(BlockTRC *p){
 
-  /*
+/*  
   cerr << style::italic << "Starting TRC arc-line between: " << endl << style::reset << this -> desc();
   cerr << style::italic << "And previous move: " << style::reset << endl;
   cerr << style::italic << p -> desc() << style::reset << endl;
-  */
+*/  
 
   data_t r = _machine -> machine_tool_radius(); 
   Point tp = p -> target();

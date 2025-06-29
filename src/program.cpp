@@ -76,7 +76,7 @@ void Program::load(const string &f, bool append){
       
       last -> shift_prev_target();
 
-      if(last-> prev && dynamic_cast<BlockTRC*>(last -> prev) -> trc() && last -> shaping()){
+      if(last-> prev && (dynamic_cast<BlockTRC*>(last -> prev) -> trc() || dynamic_cast<BlockTRC*>(last -> prev) -> last() || dynamic_cast<BlockTRC*>(last -> prev) -> last2()) && last -> shaping()){
         
         list<BlockTRC*>::iterator iter = end();
         --iter;
@@ -93,7 +93,6 @@ void Program::load(const string &f, bool append){
           last -> prev = corner;
           corner -> next = last;
           second_to_last -> next = corner;
-
 
           this -> insert(iter, corner);
           corner -> parse(_machine);

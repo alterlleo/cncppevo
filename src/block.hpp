@@ -172,6 +172,8 @@ namespace cncpp{
       Point center() const { return _center;}
       Point target() const { return _target;}
       Point delta() const { return _delta;}
+      data_t r() const { return _r; }
+      void r(data_t n) {_r = n;}
       size_t m() const{return _m;}
 
       const Profile &profile() const { return _profile;}    // the output is the reference to the original profile object in order to save more computation resources. The _profile needs to be a constant of the block, because it is modified only during the parsing phase, it's must be coupled
