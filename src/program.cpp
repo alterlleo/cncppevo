@@ -81,7 +81,7 @@ void Program::load(const string &f, bool append){
         list<BlockTRC*>::iterator iter = end();
         --iter;
 
-        if(!((last -> prev -> type() == Block::BlockType::CCWA || last -> prev -> type() == Block::BlockType::CWA) && (last -> type() == Block::BlockType::CCWA || last -> type() == Block::BlockType::CWA))){
+        if(1/*!((last -> prev -> type() == Block::BlockType::CCWA || last -> prev -> type() == Block::BlockType::CWA) && (last -> type() == Block::BlockType::CCWA || last -> type() == Block::BlockType::CWA))*/){
 
           string arc = last -> arc_shaping(nominal_start);
           cerr << arc << endl;

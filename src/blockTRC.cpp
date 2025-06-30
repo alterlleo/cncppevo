@@ -230,7 +230,52 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
     data_t offset_side = (p -> _trc_type == TRCType::LEFT) ? 1.0 : -1.0;
     data_t xd = 0, yd = 0;
 
-    // previous line is vertical
+  /*
+    Point normal1(-v1.y(), v1.x(), v1.z());
+    Point normal2(-v2.y(), v2.x(), v2.z());
+    normal1.scale(offset_side * r);
+    normal2.scale(offset_side * r);
+
+    if(fabs(v1.x() < 0.000001)){
+
+      Point tc_offset = tc + normal2;
+
+      data_t a2 = v2.y() / v2.x();
+      data_t b2 = tc_offset.y() - a2 * tc_offset.x();
+      xd = sp.x() + normal1.x();
+      yd = a2 * xd + b2;
+
+    } else if(fabs(v2.x() < 0.000001)){
+
+      Point tp_offset = tp + normal1;
+
+      data_t a1 = v1.y() / v1.x();
+      data_t b1 = tp_offset.y() - a1 * tp_offset.x();
+      xd = sc.x() + normal2.x();
+      yd = a1 * xd + b1;
+      
+    } else{
+
+      data_t a1 = v1.y() / v1.x();
+      data_t a2 = v2.y() / v2.x();
+      Point tp_offset = tp + normal1;
+      Point tc_offset = tc + normal2;
+
+      data_t b1 = tp_offset.y() - a1 * tp_offset.x();
+      data_t b2 = tc_offset.y() - a2 * tc_offset.x();
+
+      if (fabs(a1 - a2) < 1e-9) {
+        // Parallele → fallback: sposta lungo normal1
+        xd = tp.x() + normal1.x();
+        yd = tp.y() + normal1.y();
+      } else {
+        xd = (b2 - b1) / (a1 - a2);
+        yd = a1 * xd + b1;
+      }
+    }
+*/
+
+    // previous or current line is vertical
     if(v1.x() == 0 || v2.x() == 0){
 
       Point v2_norm(-v2.y(), v2.x(), v2.z());
@@ -271,23 +316,32 @@ void BlockTRC::line_line_shift(BlockTRC *prev){
 
       data_t a1 = v1.y() / v1.x();
       data_t a2 = v2.y() / v2.x();
-      data_t b1 = tp.y() - a1 * tp.x();
-      data_t b2 = tc.y() - a2 * tc.x();
+      // data_t b1 = tp.y() - a1 * tp.x();
+      // data_t b2 = tc.y() - a2 * tc.x();
 
-      offset_side = (a1 < 0) ? -offset_side : offset_side;
+      // offset_side = (a1 < 0) ? -offset_side : offset_side;
 
-      data_t offset_value1 = offset_side * r * sqrt(1 + pow(a1, 2));
-      data_t offset_value2 = offset_side * r * sqrt(1 + pow(a2, 2));
+      Point normal1(-v1.y(), v1.x(), v1.z());
+      normal1.scale(offset_side * r);
+      Point normal2(-v2.y(), v2.x(), v2.z());
+      normal2.scale(offset_side * r);
 
-      b1 += offset_value1;
-      b2 += offset_value2;
+      data_t b1 = tp.y() - a1 * tp.x() + normal1.y() - a1 * normal1.x();
+      data_t b2 = tc.y() - a2 * tc.x() + normal2.y() - a2 * normal2.x();
+
+      // data_t offset_value1 = offset_side * r * sqrt(1 + pow(a1, 2));
+      // data_t offset_value2 = offset_side * r * sqrt(1 + pow(a2, 2));
+      // 
+      // b1 += offset_value1;
+      // b2 += offset_value2;
 
       // intersection
 
       if(fabs(a1 - a2) > 0){
 
         xd = (b2 - b1) / (a1 - a2);
-        yd = (b1 * a2 - b2 * a1) / (a2 - a1);
+        // yd = (b1 * a2 - b2 * a1) / (a2 - a1);
+        yd = a1 * xd + b1;
 
       } else{ // no intersection, parallel lines
 
@@ -349,39 +403,53 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
   Point tp = p -> target();
   data_t r = _machine -> machine_tool_radius();
 
-  if(!(fabs(sp.x() - tp.x() - r) < 0.000001)){
+  if(!is_shaping_needed()){
 
-    Point vec = tp.delta(sp);
+      if(!(fabs(sp.x() - tp.x() - r) < 0.000001)){
+
+      Point vec = tp.delta(sp);
+      vec.scale(1 / vec.length());
+      Point normal(-vec.y(), vec.x(), vec.z());
+      normal.scale(-side * r);
+
+      tp = tp + normal;
+
+      if(!(dynamic_cast<BlockTRC*>(p -> prev) -> trc()))
+        sp = sp + normal;
+
+      data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
+      if(m < 0.0005)
+        m = 0;
+      data_t h = sp.y() - (m * sp.x());
+
+      i = line_circle_intersection(_center, _r + side * r, m, h, tp);
+
+    } else{ // vertical line
+
+      data_t ix = sp.x();
+
+      data_t delta = pow(_r + side*r, 2) - pow(ix - _center.x(), 2);
+      if(delta < 0)
+        throw CNCError("No interseciton between line and arc", this);
+  
+      data_t iy1 = _center.y() - sqrt(delta);
+      data_t iy2 = _center.y() + sqrt(delta);
+
+      Point i1(ix, iy1, tp.z());
+      Point i2(ix, iy2, tp.z());
+
+      i = (fabs(i1.delta(tp).length()) < fabs(i2.delta(tp).length())) ? i1 : i2;
+    }
+
+  } else{
+
+    Point vec = p -> target().delta(p -> start_point());
     vec.scale(1 / vec.length());
-    Point normal(-vec.y(), vec.x(), vec.z());
-    normal.scale(-side * r);
-
-    tp = tp + normal;
-
-    if(!(dynamic_cast<BlockTRC*>(p -> prev) -> trc()))
-      sp = sp + normal;
-
-    data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
-    data_t h = sp.y() - (m * sp.x());
-
-    i = line_circle_intersection(_center, _r + side * r, m, h, tp);
-
-  } else{ // vertical line
-
-    data_t ix = sp.x();
-
-    data_t delta = pow(_r + side*r, 2) - pow(ix - _center.x(), 2);
-    if(delta < 0)
-      throw CNCError("No interseciton between line and arc", this);
- 
-    data_t iy1 = _center.y() - sqrt(delta);
-    data_t iy2 = _center.y() + sqrt(delta);
-
-    Point i1(ix, iy1, tp.z());
-    Point i2(ix, iy2, tp.z());
-
-    i = (fabs(i1.delta(tp).length()) < fabs(i2.delta(tp).length())) ? i1 : i2;
+    vec.scale(side * r);
+    
+    i = target() + vec;
   }
+  
 
   p -> update_target(i.x(), i.y());
   p -> _delta = p -> _target.delta(p -> start_point());
@@ -390,11 +458,11 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
 
 void BlockTRC::arc_line_shift(BlockTRC *p){
 
-/*  
+/*
   cerr << style::italic << "Starting TRC arc-line between: " << endl << style::reset << this -> desc();
   cerr << style::italic << "And previous move: " << style::reset << endl;
   cerr << style::italic << p -> desc() << style::reset << endl;
-*/  
+*/
 
   data_t r = _machine -> machine_tool_radius(); 
   Point tp = p -> target();
@@ -419,6 +487,8 @@ void BlockTRC::arc_line_shift(BlockTRC *p){
       data_t m = (tc.y() - sc.y()) / (tc.x() - sc.x());
       data_t h = sc.y() - m * sc.x();
 
+      cerr << "radius: " << p -> _r << ", center: " << p -> center().desc() << ", m:" << m << ", h: " << h << endl;
+
       i = line_circle_intersection(p -> _center, p -> _r, m, h, p -> target());
 
     } else{ //vertical line
@@ -439,7 +509,7 @@ void BlockTRC::arc_line_shift(BlockTRC *p){
 
   } else{
 
-    Point vec = tp.delta(p -> start_point());
+    Point vec = tp.delta(p -> center());
     vec.scale(1 / vec.length());
     vec.scale(side * r);
     
@@ -457,7 +527,7 @@ void BlockTRC::arc_line_shift(BlockTRC *p){
 
 void BlockTRC::arc_arc_shift(BlockTRC *p){
 
-  /*
+/*
   cerr << style::italic << "Starting TRC arc-arc between: " << endl << style::reset << this -> desc() << endl;
   cerr << style::italic << "And previous move: " << style::reset << endl;
   cerr << style::italic << p -> desc() << style::reset << endl;
@@ -480,9 +550,24 @@ void BlockTRC::arc_arc_shift(BlockTRC *p){
   data_t m = -aa / bb;
   data_t h = cc / bb;
 
-  Point i = line_circle_intersection(c1, r1, m, h, p -> target());
-  data_t ix = i.x();
-  data_t iy = i.y();
+  data_t ix, iy;
+
+  if(!shaping()){
+    Point i = line_circle_intersection(c1, r1, m, h, p -> target());
+    ix = i.x();
+    iy = i.y();
+
+  } else{
+
+    Point vec = (p -> target()).delta(p -> center());
+    vec.scale(1 / vec.length());
+    vec.scale(side * r);
+    ix = (p -> target()).x() - vec.x();
+    iy = (p -> target()).y() - vec.y();
+
+  }
+
+  
 
   p -> update_target(ix, iy);
   p -> _delta = p -> _target.delta(p -> start_point());
@@ -502,28 +587,41 @@ Point BlockTRC::line_circle_intersection(Point cen, data_t r, data_t m, data_t h
   data_t c = pow(cen.x(), 2) + pow(h - cen.y(), 2) - pow(r, 2);
 
   data_t delta = pow(b, 2) - 4 * a * c;
-  // cerr << "m:" << m << " h:" << h << " center in:" << cen.desc() << " rad:" << r << endl;
+  cerr << "m:" << m << " h:" << h << " center in:" << cen.desc() << " rad:" << r << endl;
 
-  if(delta < 0){
+  if(a == 1){
 
-    throw CNCError("No line-arc intersection", this);
-  }
-    
+    cerr << "check" << endl;
 
-  data_t x1 = (-b - sqrt(delta)) / (2 * a);
-  data_t x2 = (-b + sqrt(delta)) / (2 * a);
-  
-  Point tmp1(x1, m * x1 + h, tp.z());
-  Point tmp2(x2, m * x2 + h, tp.z());
-
-  if(tmp1.delta(tp).length() < tmp2.delta(tp).length()){
-    ix = tmp1.x();
-    iy = tmp1.y();
+    ix = tp.x();
+    iy = h;
 
   } else{
-    ix = tmp2.x();
-    iy = tmp2.y();
+
+    if(delta < 0){
+
+      cerr << "a: " << a << " b: " << b << " c: " << c << "delta: " << delta << endl;
+      
+      throw CNCError("Non line-arc intersection", this);
+    }
+      
+
+    data_t x1 = (-b - sqrt(delta)) / (2 * a);
+    data_t x2 = (-b + sqrt(delta)) / (2 * a);
+    
+    Point tmp1(x1, m * x1 + h, tp.z());
+    Point tmp2(x2, m * x2 + h, tp.z());
+
+    if(tmp1.delta(tp).length() < tmp2.delta(tp).length()){
+      ix = tmp1.x();
+      iy = tmp1.y();
+
+    } else{
+      ix = tmp2.x();
+      iy = tmp2.y();
+    }
   }
+
 
   return Point(ix, iy, tp.z());
 }
@@ -741,13 +839,21 @@ bool BlockTRC::is_shaping_needed(){
 
   if((prev -> type() == BlockType::CCWA || prev -> type() == BlockType::CWA) && type() == BlockType::LINE){
 
-    if(fabs(angle_with_prev()) < PI / 2)
+    if(fabs(angle_with_prev()) < PI / 2 && dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT)
       return true;
 
     return false;
   }
 
-  if((type() == BlockType::CCWA || type() == BlockType::CWA) && prev -> type() == BlockType::LINE){
+  if((type() == BlockType::CCWA || type() == BlockType::CWA) && prev -> type() == BlockType::LINE && dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT){
+
+    if(fabs(angle_with_prev()) > PI / 2)
+      return true;
+
+    return false;
+  }
+
+  if((prev -> type() == BlockType::CCWA || prev -> type() == BlockType::CWA) && (type() == BlockType::CCWA || type() == BlockType::CWA) && dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT){
 
     if(fabs(angle_with_prev()) > PI / 2)
       return true;
