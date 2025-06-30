@@ -88,7 +88,7 @@ BlockTRC &BlockTRC::parse(const Machine *m){
     case BlockType::CWA: 
     case BlockType::CCWA: 
       // in these cases we have to compute the arc radius
-      calc_arc();
+      Block::calc_arc();
 
       _arc_feedrate = min(
         _feedrate,      // nominal one
@@ -494,6 +494,8 @@ void BlockTRC::arc_line_shift(BlockTRC *p){
     } else{ //vertical line
       data_t ix = start_point().x() + side * r;
 
+      cerr << p -> start_point().desc() << endl;
+
       data_t delta = pow(p -> _r, 2) - pow(ix - p -> _center.x(), 2);
       if(delta < 0) 
         throw CNCError("No interseciton between line and arc", this);
@@ -520,7 +522,7 @@ void BlockTRC::arc_line_shift(BlockTRC *p){
   p -> _delta = p -> _target.delta(p -> start_point());
   
   if(!shaping())
-    p -> calc_arc();  
+    p -> BlockTRC::calc_arc();
   
 }
 
@@ -876,6 +878,77 @@ bool BlockTRC::is_shaping_needed(){
 
   return false;
 }
+
+void BlockTRC::calc_arc() {
+  data_t x0, y0, z0, xc, yc, xf, yf, zf;
+  Point p0 = start_point();
+  x0 = p0.x();
+  y0 = p0.y();
+  z0 = p0.z();
+  xf = _target.x();
+  yf = _target.y();
+  zf = _target.z();
+
+  if (_r) { // if the radius is given
+
+    if(trc()){
+      xc = _center.x();
+      yc = _center.y();
+
+    } else{
+
+    data_t dx = _delta.x();
+    data_t dy = _delta.y();
+    data_t dxy2 = pow(dx, 2) + pow(dy, 2);
+    data_t delta = -pow(dy, 2) * dxy2 * (dxy2 - 4 * _r * _r);
+
+    if (delta < 0) {
+      throw CNCError("Invalid trajectory", this);
+    }
+    
+    data_t sq = sqrt(delta);
+    // signs table
+    // sign(r) | CW(-1) | CCW(+1)
+    // --------------------------
+    //      -1 |     +  |    -
+    //      +1 |     -  |    +
+    int s = (_r > 0) - (_r < 0);
+    s *= (_type == BlockType::CCWA ? 1 : -1);
+    xc = x0 + (dx - s * sq / dxy2) / 2.0;
+    yc = y0 + dy / 2.0 + s * (dx * sq) / (2 * dy * dxy2);
+
+    }
+    
+  } else { // if I,J are given
+    data_t r2;
+    _r = hypot(_i, _j);
+    xc = x0 + _i;
+    yc = y0 + _j;
+    r2 = hypot(xf - xc, yf - yc);
+    if (fabs(_r - r2) > _machine->error()) {
+      throw CNCError(
+          fmt::format("Arc endpoints mismatch error ({:})", _r - r2).c_str(),
+          this);
+    }
+  }
+  _center.x(xc);
+  _center.y(yc);
+  _center.z((zf - z0) / 2);
+  _theta_0 = atan2(y0 - yc, x0 - xc);
+  _dtheta = atan2(yf - yc, xf - xc) - _theta_0;
+  // we need the net angle so we take the 2PI complement if negative
+  if (_dtheta < 0)
+    _dtheta = 2 * M_PI + _dtheta;
+  // if CW, take the negative complement
+  if (_type == BlockType::CWA)
+    _dtheta = -(2 * M_PI - _dtheta);
+  //
+  _length = hypot(zf - z0, _dtheta * _r);
+  // from now on, it's safer to drop the sign of radius angle
+  _r = fabs(_r);
+
+}
+
 
 #ifdef BLOCKTRC_MAIN
 
