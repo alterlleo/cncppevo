@@ -107,20 +107,16 @@ BlockTRC &BlockTRC::parse(const Machine *m){
 
     case TRCType::NONE:
 
+      _trc = false;
       if(prev){
-        if(!last() && (dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::LEFT || dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT))
+        if(!last() && dynamic_cast<BlockTRC*>(prev) -> trc()){
           _last = true;
-         _trc_type = dynamic_cast<BlockTRC*>(prev) -> _trc_type;
-          _shaping_required = is_shaping_needed(); 
+          _shaping_required = is_shaping_needed();
 
-          if(last() && !last2() && (dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::LEFT || dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT))
-          _last2 = true;
-         _trc_type = dynamic_cast<BlockTRC*>(prev) -> _trc_type;
-          _shaping_required = is_shaping_needed(); 
+        }
 
       }
-
-      _trc = false;
+      
       break;
 
     case TRCType::LEFT:
@@ -174,7 +170,7 @@ void BlockTRC::shift_prev_target(){
 
   BlockTRC *p = dynamic_cast<BlockTRC*>(prev);
 
-  if(trc() || last() || last2()){
+  if(p -> trc()){
     
     if (p -> type() == BlockType::LINE && type() == BlockType::LINE) {
 

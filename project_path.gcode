@@ -1,7 +1,7 @@
 ; Tol Radius Compensation test program
 ; Comments start with ';' or '#'
 N10 G00 X-30 Y0 Z300 S1000 T01 ; Load tool 1 with radius 3 mm
-N20 G00 Z50
+N20 G00 X-30 Y0 Z50
 N30 G01 G42 Z20 F500 
 N40 G01 X0 F2000
 N50 G01 X100

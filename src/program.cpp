@@ -69,19 +69,25 @@ void Program::load(const string &f, bool append){
 
     Point nominal_start;
 
-    if(back() -> prev && this -> size() > 1){
+    if(back() -> prev && (back() -> prev -> type() != Block::BlockType::RAPID) && this -> size() > 1){
+
+      cerr << "n: " << back() -> n() << endl;
 
       BlockTRC* last = dynamic_cast<BlockTRC*>(back());
       nominal_start = last -> start_point();
       
       last -> shift_prev_target();
 
-      if(last-> prev && (dynamic_cast<BlockTRC*>(last -> prev) -> trc() || dynamic_cast<BlockTRC*>(last -> prev) -> last() || dynamic_cast<BlockTRC*>(last -> prev) -> last2()) && last -> shaping()){
+      if(last-> prev && dynamic_cast<BlockTRC*>(last -> prev) -> trc() && last -> shaping()){
+
+        cerr << "checks " << last -> n() << endl;
         
         list<BlockTRC*>::iterator iter = end();
         --iter;
 
         if(!((last -> prev -> type() == Block::BlockType::CCWA || last -> prev -> type() == Block::BlockType::CWA) && (last -> type() == Block::BlockType::CCWA || last -> type() == Block::BlockType::CWA))){
+
+          cerr << "check " << last -> n() << endl;
 
           string arc = last -> arc_shaping(nominal_start);
           cerr << arc << endl;

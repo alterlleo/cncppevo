@@ -60,7 +60,6 @@ namespace cncpp{
       bool shaping() const { return _shaping_required; }
       void set_r(data_t t){_r = t;}
       bool last() const {return _last; }
-      bool last2() const {return _last2;}
       /*
         ____        _     _ _                       _   _               _     
        |  _ \ _   _| |__ | (_) ___   _ __ ___   ___| |_| |__   ___   __| |___ 
@@ -136,8 +135,6 @@ namespace cncpp{
       bool _trc = false;
       bool _shaping_required = false;
       bool _last = false;
-      bool _last2 = false;
-
 
       /*
         ____       _            _                        _   _               _     
