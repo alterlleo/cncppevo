@@ -509,7 +509,7 @@ void BlockTRC::arc_line_shift(BlockTRC *p){
 
   } else{
 
-    Point vec = tp.delta(p -> center());
+    Point vec = tp.delta(p -> start_point());
     vec.scale(1 / vec.length());
     vec.scale(side * r);
     
