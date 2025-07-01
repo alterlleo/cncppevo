@@ -27,6 +27,12 @@ Program::~Program(){
   if(_debug)
     cerr << style::italic << format("Destroying program {:} with {:} blocks", _filename, size()) << style::reset << endl;
 
+  for(auto b : *this){
+    delete b;
+
+  }
+
+  clear();
 }
 
 std::string Program::desc(bool colored) const{
