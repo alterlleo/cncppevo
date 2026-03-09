@@ -99,7 +99,9 @@ Block::Block(string line, Block &p) : Block(line) {
   _line = line; 
   _parsed = false;
   _m = 0;
-  
+
+  _pitch = _prev -> pitch();
+  _yaw = _prev -> yaw();
 }
 
 Block::Block(string line, Block *b) : Block(line){
@@ -118,6 +120,9 @@ Block::Block(string line, Block *b) : Block(line){
   _line = line; 
   _parsed = false;
   _m = 0;
+
+  _pitch = _prev -> pitch();
+  _yaw = _prev -> yaw();
 }
 
 
@@ -357,6 +362,14 @@ bool Block::parse_token(string token){
 
   case 'Z':
     _target.z(stod(arg));
+    break;
+
+  case 'A':
+    _pitch = stod(arg);
+    break;
+  
+  case 'B':
+    _yaw = stod(arg);
     break;
 
   case 'I':

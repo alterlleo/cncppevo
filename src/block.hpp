@@ -175,6 +175,8 @@ namespace cncpp{
       data_t r() const { return _r; }
       void r(data_t n) {_r = n;}
       size_t m() const{return _m;}
+      data_t pitch() const { return _pitch;}
+      data_t yaw() const { return _yaw;}
 
       const Profile &profile() const { return _profile;}    // the output is the reference to the original profile object in order to save more computation resources. The _profile needs to be a constant of the block, because it is modified only during the parsing phase, it's must be coupled
 
@@ -205,7 +207,9 @@ namespace cncpp{
 
       Point _target = Point();                      // target position
       Point _center = Point();                      // if we are moving along an arc
-      Point _delta = Point();                       // 
+      Point _delta = Point();
+      data_t _pitch = 0;
+      data_t _yaw = 0;
 
       data_t _length = 0;
       data_t _i = 0, _j = 0, _r = 0;        // i and j are coordinates of the center, r is the radius
