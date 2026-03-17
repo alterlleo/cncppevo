@@ -40,6 +40,38 @@ data_t Block::Profile::lambda(data_t t, data_t &s){
   data_t r;               // result
   current_acc = 0.0;
 
+  if (t < 0) {
+
+    r = 0.0; s = fs;
+
+  } else if (t < dt_1) {
+    // Acc
+    r = fs * t + 0.5 * a * pow(t, 2);
+    s = fs + a * t;
+
+  } else if (t < dt_1 + dt_m) { 
+    // Cruise
+    data_t t_m = t - dt_1;
+    r = (fs * dt_1 + 0.5 * a * pow(dt_1, 2)) + f * t_m;
+    s = f;
+
+  } else if (t < dt_1 + dt_m + dt_2) {
+     // Dec
+    data_t t_2 = t - (dt_1 + dt_m);
+    data_t r_m = (fs * dt_1 + 0.5 * a * pow(dt_1, 2)) + f * dt_m;
+    r = r_m + f * t_2 + 0.5 * d * pow(t_2, 2);
+    s = f + d * t_2;
+
+  } else {
+
+    r = l; s = fe;
+  }
+
+  r /= l;
+  s *= 60;
+  return r;
+
+  /*
   if(t < 0){
     r = 0.0;
     s = 0;
@@ -74,6 +106,7 @@ data_t Block::Profile::lambda(data_t t, data_t &s){
   s *= 60;
 
   return r;
+  */
 }
 
 
@@ -440,6 +473,8 @@ void Block::compute(){
   data_t &dt_1 = _profile.dt_1;
   data_t &dt_2 = _profile.dt_2;
   data_t &dt_m = _profile.dt_m;
+  data_t &fs = _profile.fs;
+  data_t &fe = _profile.fe;
   data_t &a = _profile.a;
   data_t &d = _profile.d;
   data_t &f_m = _profile.f;
@@ -457,12 +492,37 @@ void Block::compute(){
   // ... Computations ...
 
   f_m = _arc_feedrate / 60.0;     // gcode use mm and minutes
-  dt_1 = f_m / A;
-  dt_2 = dt_1;
-  dt_m = l / f_m - (dt_1 + dt_2) / 2.0;
+  dt_1 = fabs(f_m - fs) / A;
+  dt_2 = fabs(f_m - fe) / A;
+
+  data_t l1 = fs * dt_1 + 0.5 * A * pow(dt_1, 2);
+  data_t l2 = f_m * dt_2 - 0.5 * A * pow(dt_2, 2);
+
+  if (l1 + l2 <= l) {
+
+    dt_m = (l - (l1 + l2)) / f_m;
+
+  } else {
+
+    f_m = sqrt((2.0 * A * l + pow(fs, 2) + pow(fe, 2)) / 2.0);
+    
+    dt_1 = (f_m - fs) / A;
+    dt_2 = (f_m - fe) / A;
+    dt_m = 0;
+  }
+
+  _profile.dt = _machine -> quantize(dt_1 + dt_m + dt_2, dq);
+  
+  _profile.a = (dt_1 > 0) ? (f_m - fs) / dt_1 : 0;
+  _profile.d = (dt_2 > 0) ? (fe - f_m) / dt_2 : 0;
+  _profile.f = f_m;
+
+  //dt_m = l / f_m - (dt_1 + dt_2) / 2.0;
 
   // we want to reshape the trapezoidal in order to keep the area consntant and equal to the lenght during the time quantizing
 
+  /*
+  OLD COMPUTE, WITHOUT LOOKAHEAD
   if(dt_m > 0){                   // long block
 
     dt = _machine -> quantize(dt_1 + dt_m + dt_2, dq);
@@ -481,6 +541,7 @@ void Block::compute(){
 
   a = f_m / dt_1;       // reduced value of the acceleration
   d = -(f_m / dt_2);    // reduced value of the decelration
+  */
 
   /*
   -> if declaring tmp variables as dt, dt_1, dt_m, dt_2, dq, f_m ,a, d
