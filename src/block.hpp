@@ -175,10 +175,13 @@ namespace cncpp{
       data_t r() const { return _r; }
       void r(data_t n) {_r = n;}
       size_t m() const{return _m;}
+      data_t a() const{ return _acc; }
       // data_t pitch() const { return _pitch;}
       // data_t yaw() const { return _yaw;}
 
       const Profile &profile() const { return _profile;}    // the output is the reference to the original profile object in order to save more computation resources. The _profile needs to be a constant of the block, because it is modified only during the parsing phase, it's must be coupled
+      void set_fs(data_t fs) {_profile.fs = fs; }
+      void set_fe(data_t fe) {_profile.fe = fe; }
 
       /**
        * 
@@ -188,6 +191,13 @@ namespace cncpp{
        * 
        */
       void update_target(data_t x, data_t y);
+
+      /**
+       * 
+       * @brief evaluate the velocity profile, both for the trapezoidal profile and the triangular profile
+       * 
+       */
+      void compute();
 
     protected:
 
@@ -236,13 +246,6 @@ namespace cncpp{
        * 
        */
       bool parse_token(string token);
-
-      /**
-       * 
-       * @brief evaluate the velocity profile, both for the trapezoidal profile and the triangular profile
-       * 
-       */
-      void compute();
 
       /**
        * 

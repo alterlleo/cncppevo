@@ -112,6 +112,46 @@ void Program::load(const string &f, bool append){
   file.close();
 }
 
+data_t Program::compute_limit_v(BlockTRC* prev, BlockTRC* current){
+
+
+  if (prev->type() == Block::BlockType::NO_MOTION || 
+      current->type() == Block::BlockType::NO_MOTION) return 0.0;
+
+  // directions
+  std::vector<data_t> d1 = prev->delta().vec();
+  std::vector<data_t> d2 = current->delta().vec();
+  
+  data_t l1 = prev->length();
+  data_t l2 = current->length();
+
+  if (l1 == 0 || l2 == 0) return 0.0;
+
+  // scalar product
+  data_t dot_product = 0;
+  for (size_t i = 0; i < 3; ++i) { // only x y z
+
+      dot_product += (d1[i] / l1) * (d2[i] / l2);
+  }
+
+  dot_product = std::max(-1.0, std::min(1.0, dot_product));
+  data_t theta = acos(dot_product); 
+
+  // if theta is small enough, let's consider the nominal feedrate
+  if (theta < 0.001) return std::min(prev->feedrate(), current->feedrate()) / 60.0;
+
+  data_t accel = std::min(prev -> a(), current -> a());
+  data_t tolerance = 0.01; 
+
+
+  data_t v_junction = sqrt((accel * tolerance) / tan(theta / 2.0));
+
+  data_t v_max = std::min(prev -> feedrate(), current -> feedrate()) / 60.0;
+  
+  return std::min(v_junction, v_max);
+}
+
+
 Program &Program::operator<<(string line){
   if(size() > 0){
 
@@ -124,7 +164,40 @@ Program &Program::operator<<(string line){
 
   }
 
+  BlockTRC* current = back();
   back() -> BlockTRC::parse(_machine);
+
+  if(size() > 1){
+
+    BlockTRC* prev = dynamic_cast<BlockTRC*>(current -> prev);
+    data_t v_junction = compute_limit_v(prev, current);
+
+    prev -> set_fe(v_junction);
+    current -> set_fs(v_junction);
+
+    BlockTRC* b = prev;
+    int steps = 0;
+    int H = 10;
+
+    while(b && b -> prev && steps < H){
+
+      BlockTRC* p = dynamic_cast<BlockTRC*>(b -> prev);
+      data_t max_fe = sqrt(pow(b -> profile().fe, 2) + 2 * b -> a() * b -> length());
+
+      if (p->profile().fe > max_fe) {
+
+        p -> set_fe(max_fe);
+        b -> set_fs(max_fe);
+        p -> compute(); 
+
+      } else {
+        break; 
+      }
+
+      b = p;
+      steps++;
+    }
+  }
   return *this;
 }
 

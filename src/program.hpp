@@ -65,8 +65,9 @@ namespace cncpp{
        */
       Program &operator<<(std::string line);
 
-      using iterator = std::list<BlockTRC*>::iterator;        // let's define an alias
+      data_t compute_limit_v(BlockTRC* prev, BlockTRC* current);
 
+      using iterator = std::list<BlockTRC*>::iterator;        // let's define an alias
       /**
        * 
        * @brief when a block is executed, let's use this iterator to point to the next one
