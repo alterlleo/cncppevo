@@ -71,7 +71,7 @@ BlockTRC &BlockTRC::parse(Machine *m){
     }
   }
   
-  m -> selected_tool(_tool);
+  m -> selected_tool(1);
   _machine = m;
   _target.modal(start_point());
   _delta = _target.delta(start_point());
@@ -761,6 +761,14 @@ bool BlockTRC::parse_token(string token){
   case 'Z':
     _target.z(stod(arg));
     break;
+  
+  case 'A':
+    _target.a(stod(arg));
+    break;
+  
+  case 'C':
+    _target.c(stod(arg));
+    break;
 
   case 'I':
     _i = stod(arg);
@@ -784,6 +792,7 @@ bool BlockTRC::parse_token(string token){
 
   case 'T':
     _tool = stoi(arg);
+    cout << endl << _tool  << endl;
     break;
   
   case 'M':

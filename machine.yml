@@ -9,8 +9,10 @@ machine:
     - 500
     - 1000
     - 500
-  tools: [3.0, 8.0, 5.0, 2.5]
-  offset: [0, 0, 0] # distance between spindle center and working point (kind of tool lenght)
+    - 0
+    - 0
+  tools: [0.4, 3.0, 8.0, 5.0, 2.5]
+  offset: [0, 0, 0, 0, 0] # distance between spindle center and working point (kind of tool lenght)
   mqtt:
     host: localhost
     port: 1883

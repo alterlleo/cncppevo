@@ -178,7 +178,9 @@ string Point::desc(bool col) const{
   // we want to have a function that represent a value or a string if the coordinate is not defined
   ss << "[" << coord_str(_x, col ? col_t(color::red) : nullopt) << ", "
      << coord_str(_y, col ? col_t(color::green) : nullopt) << ", "
-     << coord_str(_z, col ? col_t(color::blue) : nullopt) << "]";
+     << coord_str(_z, col ? col_t(color::blue) : nullopt) << ", "
+     << coord_str(_a, col ? col_t(color::magenta) : nullopt) << ", "
+     << coord_str(_c, col ? col_t(color::yellow) : nullopt) << "]";
 
   return ss.str();
 

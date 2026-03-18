@@ -47,8 +47,8 @@ namespace cncpp{
     _tq        = machine["tq"].as<data_t>();
     _max_error = machine["max_error"].as<data_t>();
     _fmax      = machine["fmax"].as<data_t>();
-    _zero      = Point(machine["zero"][0].as<data_t>(), machine["zero"][1].as<data_t>(), machine["zero"][2].as<data_t>());
-    _offset    = Point(machine["offset"][0].as<data_t>(), machine["offset"][1].as<data_t>(), machine["offset"][2].as<data_t>());
+    _zero      = Point(machine["zero"][0].as<data_t>(), machine["zero"][1].as<data_t>(), machine["zero"][2].as<data_t>(), machine["zero"][3].as<data_t>(), machine["zero"][4].as<data_t>());
+    _offset    = Point(machine["offset"][0].as<data_t>(), machine["offset"][1].as<data_t>(), machine["offset"][2].as<data_t>(), machine["zero"][3].as<data_t>(), machine["zero"][4].as<data_t>());
     
     // Adding tools parameters
     _tools.emplace_back(machine["tools"][0].as<data_t>());
@@ -67,6 +67,7 @@ namespace cncpp{
 
   void Machine::selected_tool(size_t t){
 
+    cout << t << endl;
     if(t > 0 && t <= 4){
 
       t--;

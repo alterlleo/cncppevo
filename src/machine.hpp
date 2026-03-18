@@ -112,7 +112,7 @@ namespace cncpp{
         return _setpoint;
       }
       data_t machine_tool_radius() const { return _tools[_selected_tool]; }
-      void selected_tool(size_t t);
+      void selected_tool(size_t t = 1);
 
 
       string mqtt_host() const { return "mqtt://" + _mqtt_host + ":" + to_string(_mqtt_port); }
@@ -174,8 +174,8 @@ namespace cncpp{
       string _settings_file = "";
       data_t _A = 5.0;
       data_t _A_stepper = 0.5;
-      Point _zero = Point(0, 0, 0);
-      Point _offset = Point(0, 0, 0);
+      Point _zero = Point(0, 0, 0, 0, 0);
+      Point _offset = Point(0, 0, 0, 0, 0);
       Point _setpoint, _position;         // setpoint is the point given to the machine
                                           // position is the point given from the machine
       data_t _tq = 0.005;                 // sampling time -> tick
@@ -184,7 +184,7 @@ namespace cncpp{
       data_t _max_error = 0.005;          // maximum allowable error -> 5 micrometers
 
       vector<data_t> _tools;
-      int _selected_tool = 0;
+      int _selected_tool = 1;
 
       string _mqtt_host = "localhost";    // broker running on the same machine (our assumption)
       int _mqtt_port = 1883;
