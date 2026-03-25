@@ -141,7 +141,7 @@ data_t Program::compute_limit_v(BlockTRC* prev, BlockTRC* current){
   if (theta < 0.001) return std::min(prev->feedrate(), current->feedrate()) / 60.0;
 
   data_t accel = std::min(prev -> a(), current -> a());
-  data_t tolerance = 0.1; 
+  data_t tolerance = 0.01; 
 
 
   data_t v_junction = sqrt((accel * tolerance) / tan(theta / 2.0));

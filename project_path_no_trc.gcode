@@ -3,7 +3,7 @@
 N10 G00 X-30 Y0 Z300 S1000 T1 ; Load tool 1 with radius 3 mm
 N20 G00 Z50
 ; TRC enabled at the end of this block:
-N30 G01 Z20 F400
+N30 G01 Z20 F100
 N40 G01 X0
 N50 G01 X100
 N60 G01 X130 Y30
