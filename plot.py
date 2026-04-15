@@ -62,7 +62,7 @@ def plot_cnc_analysis(file_path):
 
     # --- PLOT 4: ASSE C (Yaw) ---
     if 'C' in df.columns:
-        ax4.plot(df['t_tot'], df['C'], label='Asse C (Yaw)', 
+        ax4.plot(df['t_tot'], df['C'], label='Asse C (Yaw)',
                  color='purple', linewidth=1.5)
         ax4.set_title('Serie Temporale Asse C')
         ax4.set_xlabel('Tempo (s)')

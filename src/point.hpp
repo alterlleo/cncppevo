@@ -21,7 +21,7 @@ namespace cncpp{
 class Point : Object{
   public:
 
-    Point(opt_data_t x = nullopt, opt_data_t y = nullopt, opt_data_t z = nullopt, opt_data_t a = nullopt, opt_data_t c = nullopt);
+    Point(opt_data_t x = nullopt, opt_data_t y = nullopt, opt_data_t z = nullopt, opt_data_t a = 0.0, opt_data_t c = 0.0);
 
     Point& operator=(const Point& other){
       if(this != &other){

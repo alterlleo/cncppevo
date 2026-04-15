@@ -142,6 +142,8 @@ Block::Block(string line, Block *b) : Block(line){
   this -> _feedrate = b -> _feedrate;
   this -> _spindle = b -> _spindle;
   this -> _n = b -> _n + 1;
+
+  
   this -> _target.reset();
   b -> next = this;
   prev = b;
@@ -331,6 +333,9 @@ Point Block::interpolate(data_t lambda){
 
   // z is good for both cases
   result.z(p0.z() + _delta.z() * lambda);
+  result.a(p0.a() + _delta.a() * lambda);
+  result.c(p0.c() + _delta.c() * lambda);
+
   return result;
 }
 
