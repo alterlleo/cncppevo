@@ -211,8 +211,6 @@ void Machine::on_message(const struct mosquitto_message *message)  {
 
   }
 
-
-
 }
 
 
