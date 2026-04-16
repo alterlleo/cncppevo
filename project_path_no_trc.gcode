@@ -1,8 +1,5 @@
-; Tol Radius Compensation test program
-; Comments start with ';' or '#'
 N10 G00 X-30 Y0 Z300 S1000 T1 ; Load tool 1 with radius 3 mm
 N20 G00 Z50
-; TRC enabled at the end of this block:
 N30 G01 Z20 F100
 N40 G01 X0
 N50 G01 X100 A10 C30
@@ -14,7 +11,6 @@ N100 G03 Y170 I0 J20 A15 C15
 N110 G01 X50
 N120 G03 X30 Y150 R-20
 N130 G02 X0 Y125 R-20
-; TRC disabled at the end of this block:
 N140 G01 Y0
 N150 G01 Y-30 A0 C0
 N160 G00 Z150
