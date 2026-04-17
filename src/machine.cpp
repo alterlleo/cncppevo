@@ -19,7 +19,7 @@ using namespace rang;
 
 namespace cncpp{
 
-  Machine::Machine(const string &settings_file) : _settings_file(settings_file){ 
+  Machine::Machine(const string &settings_file, Mads::Agent *agent) : _settings_file(settings_file), _agent(agent){ 
 
     load(settings_file);
     mosqpp::lib_init();
@@ -113,7 +113,7 @@ void Machine::listen(const json input)  {
   _error = j.value<data_t>("error", 0) * 1000;
 }
 
-json Machine::sync(bool rapid){ // synchronize the machine with the current values
+void Machine::sync(bool rapid){ // synchronize the machine with the current values
   Point pos = (_setpoint + _offset);
   json j;
   j["x"] = pos.x();
@@ -121,11 +121,11 @@ json Machine::sync(bool rapid){ // synchronize the machine with the current valu
   j["z"] = pos.z();
   j["rapid"] = rapid;         // flag in order to tell if the movement is rapid or not
 
-  return j;
+  _agent -> publish(j);
 }
 
 
-
+}
 
 /*
   _____         _                     _       

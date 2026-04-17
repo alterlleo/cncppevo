@@ -21,6 +21,9 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 
+#include <mads.hpp>
+#include <agent.hpp>
+
 using namespace std;
 using namespace mosqpp;
 // mosquitto is a protocol for exchanging data, it's up to us the formatting
@@ -56,7 +59,7 @@ namespace cncpp{
        * @param settings_file name of the configuration file that should be loaded
        * 
        */
-      Machine(const string &settings_file);
+      Machine(const string &settings_file, Mads::Agent *agent);
       Machine(){ }
       ~Machine();
 
@@ -130,7 +133,7 @@ namespace cncpp{
        * @brief
        * @param rapid flag for rapid motion
        */
-      json sync(bool rapid);
+      void sync(bool rapid);
 
 
     private:  
@@ -159,6 +162,8 @@ namespace cncpp{
       string _sub_topic;                  // get current position
       char _msg_buffer[MQTT_BUFLEN];
       bool _connected = false;
+
+      Mads::Agent *_agent;
 
   };
 }
