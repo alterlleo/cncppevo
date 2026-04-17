@@ -22,7 +22,6 @@
 #include <agent.hpp>
 
 using namespace std;
-using namespace mosqpp;
 // mosquitto is a protocol for exchanging data, it's up to us the formatting
 // for semplicity we decide to communicate through json -> it's not efficient in terms of bandwidth. In this case we should use binary encoding
 // we have just to exchange the setpoint
@@ -30,7 +29,7 @@ using json = nlohmann::json;
 
 namespace cncpp{
 
-  class Machine final : Object, public mosquittopp{
+  class Machine final : Object{
 
     public:
 

@@ -107,6 +107,9 @@ void Machine::sync(bool rapid){ // synchronize the machine with the current valu
   j["x"] = pos.x();
   j["y"] = pos.y();
   j["z"] = pos.z();
+  j["pitch"] = pos.a();
+  j["yaw"] = pos.c();
+  // j["feedrate"] =
   j["rapid"] = rapid;         // flag in order to tell if the movement is rapid or not
 
   _agent -> publish(j);
