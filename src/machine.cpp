@@ -22,7 +22,6 @@ namespace cncpp{
   Machine::Machine(const string &settings_file, Mads::Agent *agent) : _settings_file(settings_file), _agent(agent){ 
 
     load(settings_file);
-    mosqpp::lib_init();
 
     _selected_tool = static_cast<int>(ToolType::TOOL_1);
   }
