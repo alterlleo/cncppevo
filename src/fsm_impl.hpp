@@ -58,6 +58,7 @@ state_t do_init(T &data) {
   // step 2 -> set machine to zero
   data.machine.position(data.machine.zero());
   data.machine.setpoint(data.machine.zero());
+  data.machine.set_vel(0.0, 0.0);
 
   // step 3 -> message the user
   cerr << fg::green << "Connected to machine" << style::bold << data.machine.mqtt_host() << style::reset << fg::reset << endl;
@@ -306,6 +307,7 @@ state_t do_interp_motion(T &data) {
 
   // step 3 -> sync the machine
   data.machine.setpoint(tgt);
+  data.machine.set_vel(tgt.feedrate() * tgt.setpoint().delta(m.position()) / tgt.setpoint().delta(m.position()).length());
   data.machine.sync(false);
 
   // step 4 -> check if it's done
@@ -349,6 +351,7 @@ void begin_zero(T &data) {
   
   data.machine.listen_start();
   data.machine.setpoint(data.machine.zero());
+  data.machine.set_vel(0.0, 0.0);
   data.machine.sync(true);
   cerr << "Going to zero at " << data.machine.zero().desc() << endl;
 }
@@ -363,6 +366,7 @@ void begin_rapid(T &data) {
   data.t_blk = 0.0;
   data.machine.listen_start();
   data.machine.setpoint(b.target());
+  data.machine.set_vel(b.feedrate() * b.setpoint().delta(m.position()) / b.setpoint().delta(m.position()).length());
   data.machine.sync(true);
 }
 

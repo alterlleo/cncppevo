@@ -68,30 +68,29 @@ namespace cncpp{
   }
 
 
-  string Machine::desc(bool colored) const{
+string Machine::desc(bool colored) const{
 
-    stringstream ss;
+  stringstream ss;
 
-    ss << "A = " << _A << ", ";
-    ss << "tq = " << _tq << ", ";
-    ss << "max_error = " << _max_error << ", ";
-    ss << "fmax = " << _fmax << ", " << endl;
+  ss << "A = " << _A << ", ";
+  ss << "tq = " << _tq << ", ";
+  ss << "max_error = " << _max_error << ", ";
+  ss << "fmax = " << _fmax << ", " << endl;
 
-    ss << "zero = " << _zero.desc(colored) << endl;
-    ss << "offset = " << _offset.desc(colored) << endl;
+  ss << "zero = " << _zero.desc(colored) << endl;
+  ss << "offset = " << _offset.desc(colored) << endl;
 
-    return ss.str();
-  }
+  return ss.str();
+}
 
-  data_t Machine::quantize(data_t t, data_t &dq) const{
+data_t Machine::quantize(data_t t, data_t &dq) const{
 
-      data_t q;
-      q = static_cast<size_t>((t / _tq) + 1) * _tq;
-      dq = q - t;
+    data_t q;
+    q = static_cast<size_t>((t / _tq) + 1) * _tq;
+    dq = q - t;
 
-      return q;
-  }
-
+    return q;
+}
 
 void Machine::feedback(const json input)  {
 
@@ -107,9 +106,12 @@ void Machine::sync(bool rapid){ // synchronize the machine with the current valu
   j["x"] = pos.x();
   j["y"] = pos.y();
   j["z"] = pos.z();
-  j["pitch"] = pos.a();
-  j["yaw"] = pos.c();
-  // j["feedrate"] =
+  j["a"] = pos.a();
+  j["c"] = pos.c();
+
+  // output vx and vy
+  j["vx"] = _vx;
+  j["vy"] = _vy;
   j["rapid"] = rapid;         // flag in order to tell if the movement is rapid or not
 
   _agent -> publish(j);

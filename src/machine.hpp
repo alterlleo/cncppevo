@@ -110,6 +110,9 @@ namespace cncpp{
 
         return _setpoint;
       }
+
+
+      void set_vel(data_t vx, data_t vy){ _vx = vx; _vy = vy; }
       data_t machine_tool_radius() const { return _tools[_selected_tool]; }
       void selected_tool(size_t t = 1);
       bool listening() const { return _listening; }
@@ -137,6 +140,9 @@ namespace cncpp{
       Point _offset = Point(0, 0, 0, 0, 0);
       Point _setpoint, _position;         // setpoint is the point given to the machine
                                           // position is the point given from the machine
+
+      data_t _vx = 0.0;
+      data_t _vy = 0.0;
       data_t _tq = 0.005;                 // sampling time -> tick
       data_t _fmax;
       data_t _error = INFINITY;                // current error, at the beginning we want a large error in order to go the initial starting position
