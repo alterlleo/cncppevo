@@ -33,6 +33,14 @@ struct FsmData {
 };
 
 int main(int argc, char *argv[]) {
+
+  if(argc != 3){
+
+    cerr << "Usage: " << argv[0] << " <machine.yml> <program.gcpde" << endl;
+
+    return 1;
+  }
+
   std::filesystem::path exec = argv[0];
   std::string agent_name = exec.stem().string();
   std::string settings_path = "tcp://localhost:9092";
@@ -43,7 +51,7 @@ int main(int argc, char *argv[]) {
   if (argc > 1) {
     settings_path = argv[1];
   }
-  FsmData data(agent_name, settings_path, "machine.yaml");
+  FsmData data(agent_name, settings_path, argv[2]); // argv[1] is machine.yml path
   // If crypto is needed, properly load keys and enable it
   data.agent->init(false, false);
   data.agent->connect();
@@ -60,9 +68,17 @@ int main(int argc, char *argv[]) {
   }
   data.agent->set_receive_timeout(receive_timeout);
   // Deal with further settings as needed
-
   // Initialize FSM
   auto fsm = FiniteStateMachine(&data);
+
+  // load gcode
+  try{
+    data.program.load(argv[3]);
+  } catch(exception &e){
+    cerr << fg::red << style::bold << "Error: " << e.what() << style::reset << fg::reset << endl;
+    return 2;
+  }
+
   fsm.set_timing_function([&]() {
     std::this_thread::sleep_for(loop_period);
   });
