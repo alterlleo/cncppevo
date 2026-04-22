@@ -48,10 +48,7 @@ int main(int argc, char *argv[]) {
   std::chrono::duration receive_timeout = 50ms;
   bool non_blocking = false;
 
-  if (argc > 1) {
-    settings_path = argv[1];
-  }
-  FsmData data(agent_name, settings_path, argv[2]); // argv[1] is machine.yml path
+  FsmData data(agent_name, settings_path, argv[1]); // argv[1] is machine.yml path
   // If crypto is needed, properly load keys and enable it
   data.agent->init(false, false);
   data.agent->connect();
@@ -73,7 +70,7 @@ int main(int argc, char *argv[]) {
 
   // load gcode
   try{
-    data.program.load(argv[3]);
+    data.program.load(argv[2]);
   } catch(exception &e){
     cerr << fg::red << style::bold << "Error: " << e.what() << style::reset << fg::reset << endl;
     return 2;
@@ -89,7 +86,7 @@ int main(int argc, char *argv[]) {
     data.agent->receive(non_blocking);
     data.agent->remote_control(get<1>(data.agent->last_message()));
 
-    if(data.machine.listening() && data.agent -> last_topic() != "machine"){
+    if(data.machine.listening() && data.agent -> last_topic() == "machine"){
 
       auto msg = data.agent -> last_message();
       auto in = json::parse(get<1>(msg));

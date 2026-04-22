@@ -22,6 +22,7 @@ namespace cncpp{
   Machine::Machine(const string &settings_file, Mads::Agent *agent) : _settings_file(settings_file), _agent(agent){ 
 
     load(settings_file);
+    cout << "loaded yml" << endl;
 
     _selected_tool = static_cast<int>(ToolType::TOOL_1);
   }
@@ -42,7 +43,7 @@ namespace cncpp{
     _max_error = machine["max_error"].as<data_t>();
     _fmax      = machine["fmax"].as<data_t>();
     _zero      = Point(machine["zero"][0].as<data_t>(), machine["zero"][1].as<data_t>(), machine["zero"][2].as<data_t>(), machine["zero"][3].as<data_t>(), machine["zero"][4].as<data_t>());
-    _offset    = Point(machine["offset"][0].as<data_t>(), machine["offset"][1].as<data_t>(), machine["offset"][2].as<data_t>(), machine["zero"][3].as<data_t>(), machine["zero"][4].as<data_t>());
+    _offset    = Point(machine["offset"][0].as<data_t>(), machine["offset"][1].as<data_t>(), machine["offset"][2].as<data_t>(), machine["offset"][3].as<data_t>(), machine["offset"][4].as<data_t>());
     
     // Adding tools parameters
     _tools.emplace_back(machine["tools"][0].as<data_t>());
