@@ -91,11 +91,13 @@ int main(int argc, char *argv[]) {
     data.agent->receive(non_blocking);
     data.agent->remote_control(get<1>(data.agent->last_message()));
 
-    if(data.machine.listening() && data.agent -> last_topic() == "machine"){
+    if((data.machine.listening() && data.agent -> last_topic() == "fmu") || data.machine.listening() && data.agent -> last_topic() == "machine"){
+
+      // both machine and fmu must contain "output" field in order to have all coherent
 
       auto msg = data.agent -> last_message();
       auto in = json::parse(get<1>(msg));
-      data.machine.feedback(in);
+      data.machine.feedback(in["output"]);
     }
     
   });
