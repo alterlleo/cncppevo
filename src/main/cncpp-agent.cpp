@@ -84,22 +84,30 @@ int main(int argc, char *argv[]) {
   fsm.set_timing_function([&]() {
     std::this_thread::sleep_for(loop_period);
   });
+
   fsm.run([&](FsmData &s) {
-    // here put everything that shall run at each loop iteration
 
-    // LISTENING FROM MACHINE, TOPIC = "machine"
     data.agent->receive(non_blocking);
-    data.agent->remote_control(get<1>(data.agent->last_message()));
-
-    if((data.machine.listening() && data.agent -> last_topic() == "fmu") || data.machine.listening() && data.agent -> last_topic() == "machine"){
-
-      // both machine and fmu must contain "output" field in order to have all coherent
-
-      auto msg = data.agent -> last_message();
-      auto in = json::parse(get<1>(msg));
-      data.machine.feedback(in["output"]);
-    }
     
+    auto msg = data.agent->last_message();
+    std::string topic = std::get<0>(msg);
+    std::string payload = std::get<1>(msg);
+
+    //cout << __LINE__ << endl;
+    // data.agent->remote_control(payload);
+    //cout << __LINE__ << endl;
+
+    if (data.machine.listening() && !payload.empty() && (topic == "fmu" || topic == "machine")) {
+      try {
+        auto in = json::parse(payload);
+        
+        if (in.contains("output") && in["output"].is_object()) {
+          data.machine.feedback(in["output"]);
+        }
+      } catch (const json::exception& e) {
+        cerr << fg::yellow << "JSON Parsing Error: " << e.what() << style::reset << endl;
+      }
+    }
   });
 
   // Shutdown procedure

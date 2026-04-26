@@ -112,7 +112,7 @@ void Machine::sync(bool rapid){ // synchronize the machine with the current valu
   // output vx and vy
   j["fmu_input"]["vx"] = _vx;
   j["fmu_input"]["vy"] = _vy;
-  j["rapid"] = rapid;         // flag in order to tell if the movement is rapid or not
+  // j["rapid"] = rapid;         // flag in order to tell if the movement is rapid or not
 
   _agent -> publish(j);
 }
