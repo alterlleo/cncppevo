@@ -96,8 +96,8 @@ void Machine::feedback(const json input)  {
 
   json j = input;
   
-  _position = Point(j.value<data_t>("xf", 0)*1000, j.value<data_t>("yf", 0) * 1000, j.value<data_t>("zf", 0) * 1000);
-  _error = j.value<data_t>("error", 0) * 1000;
+  _position = Point(j.value<data_t>("xf", 0), j.value<data_t>("yf", 0), j.value<data_t>("zf", 0));
+  _error = j.value<data_t>("error", 0);
 }
 
 void Machine::sync(bool rapid){ // synchronize the machine with the current values
