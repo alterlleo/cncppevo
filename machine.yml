@@ -3,12 +3,12 @@
 machine:
   A: 3.0            # max acceleration      [meters/secondssquare]
   tq: 0.005         # step time             [milliseconds]
-  fmax: 300       # maximum feedrate      [meters/minute]
+  fmax: 300       # maximum feedrate      [millimeters/minute]
   max_error: 0.005  # maximum allowable error [millimeters]
   zero:             # list -> it can be written also as zero: [500, 1000, 500]
-    - 500
-    - 1000
-    - 500
+    - 50
+    - 100
+    - 5
     - 0
     - 0
   tools: [0.4, 3.0, 8.0, 5.0]

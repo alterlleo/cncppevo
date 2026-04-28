@@ -243,8 +243,14 @@ state_t do_rapid_motion(T &data) {
     data.machine.sync(true);
 
     // step 2 -> exit if error is small or max time has elapsed
+    data_t distance = INFINITY;
+    if(data.machine.position().is_complete()){
+      distance = b.target().delta(data.machine.position()).length();
+    }
+
     duration = b.length() / data.machine.fmax() * 60.0 * 2;
-    if(data.machine.error() < data.machine.max_error() || data.t_blk > duration){
+
+    if(distance < data.machine.max_error() || data.t_blk > duration){
 
       cerr << "Rapid block " << b.desc() << " completed." << endl;
       cerr << "Duration: " << duration << " s" << endl;
@@ -305,7 +311,7 @@ state_t do_interp_motion(T &data) {
 
   // step 3 -> sync the machine
   data.machine.setpoint(tgt);
-  data.machine.set_vel(abs(b.feedrate() * b.target().delta(p).x() / b.target().delta(p).length()), abs(b.feedrate() * b.target().delta(p).y() / b.target().delta(p).length()));
+  data.machine.set_vel(b.feedrate() * b.target().delta(p).x() / b.target().delta(p).length(), b.feedrate() * b.target().delta(p).y() / b.target().delta(p).length());
   data.machine.sync(false);
 
   // step 4 -> check if it's done
@@ -367,7 +373,7 @@ void begin_rapid(T &data) {
   data.machine.listen_start();
   data.machine.setpoint(b.target());
   data_t rapid_f = data.machine.fmax();
-  data.machine.set_vel(abs(rapid_f * b.target().delta(p).x() / b.target().delta(p).length()), abs(rapid_f * b.target().delta(p).y() / b.target().delta(p).length()));
+  data.machine.set_vel(rapid_f * b.target().delta(p).x() / b.target().delta(p).length(), rapid_f * b.target().delta(p).y() / b.target().delta(p).length());
   data.machine.sync(true);
 }
 
