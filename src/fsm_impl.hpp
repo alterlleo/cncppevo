@@ -349,7 +349,8 @@ void begin_zero(T &data) {
   
   data.machine.listen_start();
   data.machine.setpoint(data.machine.zero());
-  data.machine.set_vel(0.0, 0.0);
+  data_t rapid_f = data.machine.fmax();
+  data.machine.set_vel(rapid_f / 10.0, rapid_f / 10.0);
   data.machine.sync(true);
   cerr << "Going to zero at " << data.machine.zero().desc() << endl;
 }
