@@ -501,7 +501,7 @@ void Block::compute(){
   dt_2 = fabs(f_m - fe) / A;
 
   data_t l1 = fs * dt_1 + 0.5 * A * pow(dt_1, 2);
-  data_t l2 = f_m * dt_2 - 0.5 * A * pow(dt_2, 2);
+  data_t l2 = fe * dt_2 - 0.5 * A * pow(dt_2, 2);
 
   if (l1 + l2 <= l) {
 
