@@ -1,4 +1,4 @@
-N10 G00 X30 Y0 Z300 S1000 T1 ; Load tool 1 with radius 3 mm
+N10 G00 X30 Y0 Z30 S1000 T1 ; Load tool 1 with radius 3 mm
 N20 G00 Z25
 N30 G01 Z20 F200
 N40 G01 A10 C30

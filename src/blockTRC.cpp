@@ -79,6 +79,14 @@ BlockTRC &BlockTRC::parse(Machine *m){
   _length = _delta.length();
   _nominal_start = start_point();
 
+  if (_delta.a() > 0.001 || _delta.c() > 0.001) {
+    data_t max_angle = max(fabs(_delta.a()), fabs(_delta.c()));
+    if (max_angle > 0) {
+      _length = max_angle; 
+      _acc = _machine -> A_stepper();
+    }
+  }
+
   switch(_type){
 
     case BlockType::LINE:
