@@ -135,7 +135,7 @@ namespace cncpp{
 
       string _settings_file = "";
       data_t _A = 5.0;
-      data_t _A_stepper = 2.5;
+      data_t _A_stepper = 1.0;
       Point _zero = Point(0, 0, 0, 0, 0);
       Point _offset = Point(0, 0, 0, 0, 0);
       Point _setpoint, _position;         // setpoint is the point given to the machine
