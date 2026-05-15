@@ -812,7 +812,6 @@ bool BlockTRC::parse_token(string token){
 
   case 'T':
     _tool = stoi(arg);
-    cout << endl << _tool  << endl;
     break;
   
   case 'M':

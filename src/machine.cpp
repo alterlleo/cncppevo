@@ -22,7 +22,6 @@ namespace cncpp{
   Machine::Machine(const string &settings_file, Mads::Agent *agent) : _settings_file(settings_file), _agent(agent){ 
 
     load(settings_file);
-    cout << "loaded yml" << endl;
 
     _selected_tool = static_cast<int>(ToolType::TOOL_1);
   }
@@ -56,7 +55,6 @@ namespace cncpp{
 
   void Machine::selected_tool(size_t t){
 
-    cout << t << endl;
     if(t > 0 && t <= 4){
 
       t--;

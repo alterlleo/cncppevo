@@ -51,13 +51,10 @@ int main(int argc, char *argv[]) {
   FsmData data(agent_name, settings_path, argv[1]); // argv[1] is machine.yml path
   // If crypto is needed, properly load keys and enable it
   data.agent->init(false, false);
-  cout << __LINE__ << endl;
   data.agent->enable_remote_control();
   data.agent->connect();
-  cout << __LINE__ << endl;
 
   auto settings = data.agent->get_settings();
-  cout << __LINE__ << endl;
   if (settings.contains("period")) {
     loop_period = std::chrono::milliseconds(settings["period"].get<int>());
   }
@@ -67,7 +64,6 @@ int main(int argc, char *argv[]) {
   if (settings.contains("non_blocking")) {
     non_blocking = settings["non_blocking"].get<bool>();
   }
-  cout << __LINE__ << endl;
   data.agent->set_receive_timeout(receive_timeout);
   // Deal with further settings as needed
   // Initialize FSM
