@@ -19,15 +19,6 @@ relaunch = true # optional, default=false: restart on non-zero exit status
 tty = true # optional, default=false: enable TTY/attach interaction
 # if workdir/.venv exists, director exposes it to launched Python commands
 
-[mongo]
-command = "docker run --rm -t -v${PWD}/db:/data/db mongo"
-after = "broker"
-workdir = ""
-enabled = false
-scale = 1
-relaunch = true
-tty = false
-
 [logger]
 command = "mads logger"
 after = "broker"
@@ -46,23 +37,21 @@ scale = 1
 relaunch = false
 tty = false
 
-[perf_assess]
-command = "mads perf_assess -p10 -i${ID}"
-after = "broker"
-workdir = ""
-enabled = false
-scale = 2
-relaunch = false
-tty = false
-
 [cncppevo]
 command = "./build/src/main/CNCagent machine.yml project_path_no_trc.gcode"
-enabled = false
+enabled = true
+tty = false
 workdir = ""
 
 [fmu]
 command = "./build/src/main/mads-fmu models/multibody_model.fmu"
 workdir = "../FMU_agent/"
-enabled = false
+tty = false
+enabled = true
 
+[rerunner]
+command = "source ../.venv/bin/activate; mads sink rerunner.plugin"
+workidr = ""
+tty = false
+enabled = false 
 
