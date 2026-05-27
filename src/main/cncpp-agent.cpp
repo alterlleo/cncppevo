@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
   std::filesystem::path exec = argv[0];
   std::string agent_name = exec.stem().string();
   std::string settings_path = "tcp://localhost:9092";
-  std::chrono::duration loop_period = 50ms;
+  std::chrono::duration loop_period = 1ms;
   std::chrono::duration receive_timeout = 50ms;
   bool non_blocking = false;
 
@@ -81,17 +81,20 @@ int main(int argc, char *argv[]) {
     std::this_thread::sleep_for(loop_period);
   });
 
+  auto t_start = std::chrono::steady_clock::now();
+  auto t_end = std::chrono::steady_clock::now();
+  long long max_tet = 0;
+  long long total_tet = 0;
+  int loop_count = 0;
+
   fsm.run([&](FsmData &s) {
+    t_start = std::chrono::steady_clock::now();
 
     data.agent->receive(non_blocking);
     
     auto msg = data.agent->last_message();
     std::string topic = std::get<0>(msg);
     std::string payload = std::get<1>(msg);
-
-    //cout << __LINE__ << endl;
-    // data.agent->remote_control(payload);
-    //cout << __LINE__ << endl;
 
     if (data.machine.listening() && !payload.empty() && (topic == "fmu" || topic == "machine")) {
       try {
@@ -103,6 +106,16 @@ int main(int argc, char *argv[]) {
       } catch (const json::exception& e) {
         cerr << fg::yellow << "JSON Parsing Error: " << e.what() << style::reset << endl;
       }
+    }
+
+    t_end = std::chrono::steady_clock::now();
+    
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count();
+    if(loop_count < 10){
+      loop_count++;
+    } else{
+      cerr << duration << endl;
+      loop_count = 0;
     }
   });
 

@@ -2,7 +2,7 @@
 
 machine:
   A: 3000.0            # max acceleration      [meters/secondssquare]
-  tq: 0.05        # step time             [milliseconds]
+  tq: 0.001        # step time             [milliseconds]
   fmax: 300       # maximum feedrate      [millimeters/minute]
   max_error: 0.005  # maximum allowable error [millimeters]
   zero:             # list -> it can be written also as zero: [500, 1000, 500]
