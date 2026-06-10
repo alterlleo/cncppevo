@@ -44,7 +44,7 @@ tty = false
 workdir = ""
 
 [fmu]
-command = "./build/src/main/mads-fmu ../machine-model/multibody_model.fmu"
+command = "./build/src/main/mads-fmu ../machine-model/multibody_model.fmu --trigger"
 workdir = "../FMU_agent/"
 tty = false
 enabled = true
