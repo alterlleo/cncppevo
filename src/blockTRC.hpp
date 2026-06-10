@@ -70,7 +70,7 @@ namespace cncpp{
                                                                               
       */
 
-      BlockTRC &operator=(BlockTRC &b);
+      // BlockTRC &operator=(BlockTRC &b);
 
       /**
        * 

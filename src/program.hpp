@@ -20,7 +20,7 @@
 
 namespace cncpp{
 
-  class Program : Object, public std::list<BlockTRC*>{
+  class Program : Object, public std::list<BlockTRC>{
 
     public:
 
@@ -65,9 +65,9 @@ namespace cncpp{
        */
       Program &operator<<(std::string line);
 
-      data_t compute_limit_v(BlockTRC* prev, BlockTRC* current);
+      data_t compute_limit_v(BlockTRC prev, BlockTRC current);
 
-      using iterator = std::list<BlockTRC*>::iterator;        // let's define an alias
+      using iterator = std::list<BlockTRC>::iterator;        // let's define an alias
       /**
        * 
        * @brief when a block is executed, let's use this iterator to point to the next one

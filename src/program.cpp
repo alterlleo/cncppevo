@@ -27,10 +27,12 @@ Program::~Program(){
   if(_debug)
     cerr << style::italic << format("Destroying program {:} with {:} blocks", _filename, size()) << style::reset << endl;
 
+  /*
   for(auto b : *this){
     delete b;
 
   }
+  */
 
   clear();
 }
@@ -41,8 +43,8 @@ std::string Program::desc(bool colored) const{
 
   for(auto &b : *this){ // we loop all the blocks inside the current program object
 
-    ss << b -> desc();
-    ss << format(", previous: {:0>3}", b -> prev ? b -> prev -> n() : 0);
+    ss << b.desc();
+    ss << format(", previous: {:0>3}", b.prev ? b.prev -> n() : 0);
     ss << endl;
 
   }
@@ -71,36 +73,36 @@ void Program::load(const string &f, bool append){
     }
 
     *this << line;
-    back() -> desc();
+    back().desc();
 
     Point nominal_start;
 
-    if(back() -> prev && this -> size() > 1){
+    if(back().prev && this -> size() > 1){
 
-      BlockTRC* last = dynamic_cast<BlockTRC*>(back());
-      nominal_start = last -> start_point();
+      BlockTRC last = back();
+      nominal_start = last.start_point();
       
-      last -> shift_prev_target();
+      last.shift_prev_target();
 
-      if(last-> prev && dynamic_cast<BlockTRC*>(last -> prev) -> trc() && last -> shaping()){
+      if(last.prev && last.prev -> trc() && last.shaping()){
         
-        list<BlockTRC*>::iterator iter = end();
+        list<BlockTRC>::iterator iter = end();
         --iter;
 
         if(1/*!((last -> prev -> type() == Block::BlockType::CCWA || last -> prev -> type() == Block::BlockType::CWA) && (last -> type() == Block::BlockType::CCWA || last -> type() == Block::BlockType::CWA))*/){
 
-          string arc = last -> arc_shaping(nominal_start);
+          string arc = last.arc_shaping(nominal_start);
           cerr << arc << endl;
           
-          BlockTRC *second_to_last = dynamic_cast<BlockTRC*>(last -> prev);
+          BlockTRC *second_to_last = last.prev;
 
           BlockTRC *corner = new BlockTRC(arc, second_to_last);
 
-          last -> prev = corner;
-          corner -> next = last;
+          last.prev = corner;
+          corner -> next = &last;
           second_to_last -> next = corner;
 
-          this -> insert(iter, corner);
+          this -> insert(iter, *corner);
           corner -> parse(_machine);
         }
 
@@ -112,18 +114,18 @@ void Program::load(const string &f, bool append){
   file.close();
 }
 
-data_t Program::compute_limit_v(BlockTRC* prev, BlockTRC* current){
+data_t Program::compute_limit_v(BlockTRC prev, BlockTRC current){
 
 
-  if (prev->type() == Block::BlockType::NO_MOTION || 
-      current->type() == Block::BlockType::NO_MOTION) return 0.0;
+  if (prev.type() == Block::BlockType::NO_MOTION || 
+      current.type() == Block::BlockType::NO_MOTION) return 0.0;
 
   // directions
-  std::vector<data_t> d1 = prev->delta().vec();
-  std::vector<data_t> d2 = current->delta().vec();
+  std::vector<data_t> d1 = prev.delta().vec();
+  std::vector<data_t> d2 = current.delta().vec();
   
-  data_t l1 = prev->length();
-  data_t l2 = current->length();
+  data_t l1 = prev.length();
+  data_t l2 = current.length();
 
   if (l1 == 0 || l2 == 0) return 0.0;
 
@@ -138,15 +140,15 @@ data_t Program::compute_limit_v(BlockTRC* prev, BlockTRC* current){
   data_t theta = acos(dot_product); 
 
   // if theta is small enough, let's consider the nominal feedrate
-  if (theta < 0.001) return std::min(prev->feedrate(), current->feedrate()) / 60.0;
+  if (theta < 0.001) return std::min(prev.feedrate(), current.feedrate()) / 60.0;
 
-  data_t accel = std::min(prev -> a(), current -> a());
+  data_t accel = std::min(prev.a(), current.a());
   data_t tolerance = 0.01; 
 
 
   data_t v_junction = sqrt((accel * tolerance) / tan(theta / 2.0));
 
-  data_t v_max = std::min(prev -> feedrate(), current -> feedrate()) / 60.0;
+  data_t v_max = std::min(prev.feedrate(), current.feedrate()) / 60.0;
   
   return std::min(v_junction, v_max);
 }
@@ -156,31 +158,31 @@ Program &Program::operator<<(string line){
   if(size() > 0){
 
     // the current program is not empty
-    emplace_back(new BlockTRC(line, back())); // it's the same as -> emplace_back(Block(line, back()));
+    emplace_back(line, back()); // it's the same as -> emplace_back(Block(line, back()));
 
   } else{
 
-    emplace_back(new BlockTRC(line));
+    emplace_back(line);
 
   }
 
-  BlockTRC* current = back();
-  back() -> BlockTRC::parse(_machine);
+  BlockTRC& current = back();
+  current.parse(_machine);
 
   // rise error if A and C fields are present together with movement axes
   if(size() > 1){
 
-    BlockTRC* prev = dynamic_cast<BlockTRC*>(current -> prev);
+    BlockTRC* prev = current.prev;
 
-    if(current -> type() != BlockTRC::BlockType::RAPID && (current -> target().a() != prev -> target().a() || current -> target().c() != prev -> target().c()) && (current -> target().x() != prev -> target().x() || current -> target().y() != prev -> target().y())){
+    if(current.type() != BlockTRC::BlockType::RAPID && (current.target().a() != prev -> target().a() || current.target().c() != prev -> target().c()) && (current.target().x() != prev -> target().x() || current.target().y() != prev -> target().y())){
 
       throw CNCError("Invalid G-Code command: A and C are not movement axes, they must be sliced as positioning axes", this);
     }
 
-    data_t v_junction = compute_limit_v(prev, current);
+    data_t v_junction = compute_limit_v(*prev, current);
 
     prev -> set_fe(v_junction);
-    current -> set_fs(v_junction);
+    current.set_fs(v_junction);
 
     BlockTRC* b = prev;
     int steps = 0;
@@ -188,7 +190,7 @@ Program &Program::operator<<(string line){
 
     while(b && b -> prev && steps < H){
 
-      BlockTRC* p = dynamic_cast<BlockTRC*>(b -> prev);
+      BlockTRC* p = b -> prev;
       data_t max_fe = sqrt(pow(b -> profile().fe, 2) + 2 * b -> a() * b -> length());
 
       if (p->profile().fe > max_fe) {

@@ -22,6 +22,8 @@ using namespace std;
 
 namespace cncpp{
 
+  class BlockTRC; // let it know that there is this class
+
   class Block : protected Object{
     public:
 
@@ -51,8 +53,8 @@ namespace cncpp{
         data_t lambda(data_t t, data_t &s);
       };
 
-      Block *prev;      // pointer to the previous block
-      Block *next;      // pointer to the next block
+      BlockTRC *prev;      // pointer to the previous block
+      BlockTRC *next;      // pointer to the next block
 
       enum class BlockType{
         RAPID = 0,
@@ -84,11 +86,11 @@ namespace cncpp{
        * 
        */
       Block(string line);
-      Block(string line, Block &prev);
-      Block(string line, Block *prev);
+      Block(string line, BlockTRC &prev);
+      Block(string line, BlockTRC *prev);
       virtual ~Block();
 
-      Block &operator=(Block &b); 
+      // Block &operator=(Block &b); 
 
       /*
         ____        _     _ _                       _   _               _     

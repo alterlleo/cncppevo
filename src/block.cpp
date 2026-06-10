@@ -16,6 +16,7 @@
 #include <math.h>
 
 #include "block.hpp"
+#include "blockTRC.hpp"
 
 #ifdef DEBUG_BUILD
 #include <iostream> // only for debugging
@@ -115,29 +116,24 @@ data_t Block::Profile::lambda(data_t t, data_t &s){
 */
 Block::Block(string line) : _line(line), _n(0), prev(nullptr), next(nullptr) {} // everything else is calculated in the parsing function
 
-Block::Block(string line, Block &p) : Block(line) {
+Block::Block(string line, BlockTRC &p) : Block(line) {
   
-  *this = p;        // copying from previous object
+  _tool = p._tool;
+  _feedrate = p._feedrate;
+  _spindle = p._spindle;
 
-  // by redefining the assignement operator, this stuff is no more needed
-
-  
-  p.next = this;    
+  p.next = static_cast<BlockTRC*>(this);    
   prev = &p;
 
-  // reset non-modal parameters
   _type = BlockType::NO_MOTION;
   _target.reset();
-  _n = prev -> n() + 1;
+  _n = prev -> n() + 1; 
   _line = line; 
   _parsed = false;
   _m = 0;
-
-  // _pitch = _prev -> pitch();
-  // _yaw = _prev -> yaw();
 }
 
-Block::Block(string line, Block *b) : Block(line){
+Block::Block(string line, BlockTRC *b) : Block(line){
   this -> _tool = b -> _tool;
   this -> _feedrate = b -> _feedrate;
   this -> _spindle = b -> _spindle;
@@ -145,7 +141,7 @@ Block::Block(string line, Block *b) : Block(line){
 
   
   this -> _target.reset();
-  b -> next = this;
+  b -> next = static_cast<BlockTRC*>(this);
   prev = b;
 
   // reset non-modal parameters
@@ -168,6 +164,7 @@ Block::~Block(){
 }
 
 
+/*
 Block &Block::operator=(Block &b){
 
   if(!b._parsed) throw CNCError("Previous block has not been parsed", this);
@@ -183,6 +180,7 @@ Block &Block::operator=(Block &b){
 
   return *this;
 }
+*/
 
 string Block::desc(bool colored) const{
   

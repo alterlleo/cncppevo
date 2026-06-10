@@ -35,10 +35,11 @@ BlockTRC::BlockTRC(string line) : Block(line), _trc(false) {}
 
 BlockTRC::BlockTRC(string line, BlockTRC &prev) : Block(line, prev), _trc(prev.trc()), _trc_type(prev._trc_type) {}
 
-BlockTRC::BlockTRC(string line, BlockTRC *b) : Block(line, b), _trc(b -> trc()), _trc_type(dynamic_cast<BlockTRC*>(prev) -> _trc_type) {}
+BlockTRC::BlockTRC(string line, BlockTRC *b) : Block(line, b), _trc(b -> trc()), _trc_type(prev -> _trc_type) {}
 
 BlockTRC::~BlockTRC(){}
 
+/*
 BlockTRC &BlockTRC::operator=(BlockTRC &b){
 
   Block::operator=(b);
@@ -46,6 +47,7 @@ BlockTRC &BlockTRC::operator=(BlockTRC &b){
 
   return *this;
 }
+*/
 
 BlockTRC &BlockTRC::parse(Machine *m){
 
@@ -131,7 +133,7 @@ BlockTRC &BlockTRC::parse(Machine *m){
 
       _trc = false;
       if(prev){
-        if(!last() && dynamic_cast<BlockTRC*>(prev) -> trc()){
+        if(!last() && prev -> trc()){
           _last = true;
           _shaping_required = is_shaping_needed();
 
@@ -192,7 +194,7 @@ string BlockTRC::desc(bool colored) const{
 
 void BlockTRC::shift_prev_target(){
 
-  BlockTRC *p = dynamic_cast<BlockTRC*>(prev);
+  BlockTRC *p = prev;
 
   if(p -> trc()){
     
@@ -436,7 +438,7 @@ void BlockTRC::line_arc_shift(BlockTRC *p){
 
       tp = tp + normal;
 
-      if(!(dynamic_cast<BlockTRC*>(p -> prev) -> trc()))
+      if(!(p -> prev -> trc()))
         sp = sp + normal;
 
       data_t m = (tp.y() - sp.y()) / (tp.x() - sp.x());
@@ -678,7 +680,7 @@ string BlockTRC::arc_shaping(Point nominal_start) {
   Point tmp = p1.delta(nominal_start);
   tmp.scale(1/tmp.length());
   Point normal_tmp(-tmp.y(), tmp.x(), tmp.z());
-  if (dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT)
+  if (prev -> _trc_type == TRCType::RIGHT)
     normal_tmp.scale(-1);
 
   normal_tmp.scale(r);
@@ -861,13 +863,13 @@ bool BlockTRC::is_shaping_needed(){
 
   if((prev -> type() == BlockType::CCWA || prev -> type() == BlockType::CWA) && type() == BlockType::LINE){
 
-    if(fabs(angle_with_prev()) < PI / 2 && dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT)
+    if(fabs(angle_with_prev()) < PI / 2 && prev -> _trc_type == TRCType::RIGHT)
       return true;
 
     return false;
   }
 
-  if((type() == BlockType::CCWA || type() == BlockType::CWA) && prev -> type() == BlockType::LINE && dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT){
+  if((type() == BlockType::CCWA || type() == BlockType::CWA) && prev -> type() == BlockType::LINE && prev -> _trc_type == TRCType::RIGHT){
 
     if(fabs(angle_with_prev()) > PI / 2)
       return true;
@@ -875,7 +877,7 @@ bool BlockTRC::is_shaping_needed(){
     return false;
   }
 
-  if((prev -> type() == BlockType::CCWA || prev -> type() == BlockType::CWA) && (type() == BlockType::CCWA || type() == BlockType::CWA) && dynamic_cast<BlockTRC*>(prev) -> _trc_type == TRCType::RIGHT){
+  if((prev -> type() == BlockType::CCWA || prev -> type() == BlockType::CWA) && (type() == BlockType::CCWA || type() == BlockType::CWA) && prev -> _trc_type == TRCType::RIGHT){
 
     if(fabs(angle_with_prev()) > PI / 2)
       return true;
