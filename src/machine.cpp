@@ -93,8 +93,13 @@ data_t Machine::quantize(data_t t, data_t &dq) const{
 void Machine::feedback(const json input)  {
 
   json j = input;
+  if(j.contains("position")){
+
+    auto tmp = j["position"];
+
+    _position = Point(tmp.value<data_t>("xf", 0), tmp.value<data_t>("yf", 0), tmp.value<data_t>("zf", 0));
+  }
   
-  _position = Point(j.value<data_t>("xf", 0), j.value<data_t>("yf", 0), j.value<data_t>("zf", 0));
   _error = j.value<data_t>("error", INFINITY);
 }
 
