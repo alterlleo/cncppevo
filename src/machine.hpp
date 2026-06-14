@@ -127,6 +127,7 @@ namespace cncpp{
        * @param rapid flag for rapid motion
        */
       void sync(bool rapid);
+      void is_sim(bool sim){ _sim = sim; }
 
 
     private:  
@@ -152,8 +153,8 @@ namespace cncpp{
       int _selected_tool = 1;
 
       bool _connected = false;
-
       bool _listening = false;
+      bool _sim = true;
 
       Mads::Agent *_agent;
 

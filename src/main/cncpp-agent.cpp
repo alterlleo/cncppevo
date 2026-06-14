@@ -64,6 +64,9 @@ int main(int argc, char *argv[]) {
   if (settings.contains("non_blocking")) {
     non_blocking = settings["non_blocking"].get<bool>();
   }
+  if (settings.contains("sim")){
+    data.machine.is_sim(settings["sim"].get<bool>());
+  }
   data.agent->set_receive_timeout(receive_timeout);
   // Deal with further settings as needed
   // Initialize FSM
