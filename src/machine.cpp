@@ -120,13 +120,19 @@ void Machine::sync(bool rapid){ // synchronize the machine with the current valu
     j["fmu_input"]["vy"] = _vy;
   } else{
 
+    j["fmu_input"]["x"] = pos.x();
+    j["fmu_input"]["y"] = pos.y();
+    j["fmu_input"]["z"] = pos.z();
+    j["fmu_input"]["a"] = pos.a();
+    j["fmu_input"]["c"] = pos.c();
+    j["fmu_input"]["vx"] = _vx;
+    j["fmu_input"]["vy"] = _vy;
+
     j["spi_input"]["x"] = pos.x();
     j["spi_input"]["y"] = pos.y();
     j["spi_input"]["z"] = pos.z();
     j["spi_input"]["a"] = pos.a();
     j["spi_input"]["c"] = pos.c();
-
-    // output vx and vy
     j["spi_input"]["vx"] = _vx;
     j["spi_input"]["vy"] = _vy;
   }
