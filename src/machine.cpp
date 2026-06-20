@@ -97,7 +97,7 @@ void Machine::feedback(const json input)  {
 
     auto tmp = j["position"];
 
-    _position = Point(tmp.value<data_t>("xf", 0), tmp.value<data_t>("yf", 0), tmp.value<data_t>("zf", 0));
+    _position = Point(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4]);
   }
   
   _error = j.value<data_t>("error", INFINITY);
