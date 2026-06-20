@@ -18,12 +18,15 @@ using namespace rang;
 using namespace cncpp;
 using namespace chrono;
 
+using double_d = std::chrono::duration<double>;
+
 struct FsmData {
   std::unique_ptr<Mads::Agent> agent;
 
   // cncpp fields
   Program program;
   Machine machine;
+  unique_ptr<Timer<double_d, false>> timer;
   data_t t_tot, t_blk;
   FsmData(string name, string settings, string yaml) 
     : agent(std::make_unique<Mads::Agent>(name, settings)), 
@@ -80,8 +83,12 @@ int main(int argc, char *argv[]) {
     return 2;
   }
 
-  fsm.set_timing_function([&]() {
-    std::this_thread::sleep_for(loop_period);
+    fsm.set_timing_function([&]() {
+    try {
+      data.timer->wait_throw();
+    } catch (const TimerError &e) {
+      cerr << "Timer error: " << e.what() << endl;
+    }
   });
 
   fsm.run([&](FsmData &s) {
