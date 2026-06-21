@@ -162,6 +162,7 @@ list(FILTER SRC_FILES EXCLUDE REGEX ".*fsm.*")
 
 # creating our library for source files
 add_library(cncpp_lib STATIC ${SRC_FILES})
+# target_compile_definitions(cncpp)
 target_link_libraries(cncpp_lib PRIVATE fmt::fmt yaml-cpp::yaml-cpp keystroker)
 set_target_properties(cncpp_lib PROPERTIES PUBLIC_HEADER "${HEADERS}")
 list(APPEND TARGET_LIST cncpp_lib) # this target will be installed

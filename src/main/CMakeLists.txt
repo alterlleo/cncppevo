@@ -20,7 +20,7 @@ endif()
 # Agent
 add_executable(CNCagent cncpp-agent.cpp)
 
-target_compile_definitions(CNCagent PRIVATE JSON_USE_GLOBAL_UDLS=0 JSON_DIAGNOSTICS=0)
+target_compile_definitions(CNCagent PRIVATE JSON_USE_GLOBAL_UDLS=0 JSON_DIAGNOSTICS=0 ENABLE_RT_SCHEDULER)
 target_include_directories(CNCagent BEFORE PRIVATE ${CMAKE_SOURCE_DIR}/src/compat)
 target_include_directories(CNCagent PRIVATE ${cxxopts_SOURCE_DIR}/include)
 if(WIN32)

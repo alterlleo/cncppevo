@@ -83,7 +83,7 @@ public:
 #ifdef ENABLE_RT_SCHEDULER
     // Set the scheduler to SCHED_FIFO with priority 1
     sched_param param;
-    param.sched_priority = 1;
+    param.sched_priority = 50;
     if (sched_setscheduler(0, SCHED_FIFO, &param) == -1) {
       throw TimerError(string("Failed to set scheduler: ") + strerror(errno));
     }

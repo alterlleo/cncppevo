@@ -83,7 +83,10 @@ int main(int argc, char *argv[]) {
     return 2;
   }
 
-    fsm.set_timing_function([&]() {
+  data.timer = std::make_unique<Timer<double_d, false>>(loop_period, loop_period * 1.5);
+  data.timer->start();
+
+  fsm.set_timing_function([&]() {
     try {
       data.timer->wait_throw();
     } catch (const TimerError &e) {
