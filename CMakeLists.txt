@@ -146,8 +146,6 @@ configure_file(
   ${SRC_DIR}/defines.hpp
 )
 
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/examples)
-
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
 #    | |/ _` | '__/ _` |/ _ \ __/ __|
