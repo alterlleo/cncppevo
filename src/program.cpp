@@ -25,7 +25,7 @@ Program::Program(const std::string &f, Machine *m) : _filename(f), _machine(m) {
 Program::~Program(){
 
   if(_debug)
-    cerr << style::italic << format("Destroying program {:} with {:} blocks", _filename, size()) << style::reset << endl;
+    cerr << style::italic << fmt::format("Destroying program {:} with {:} blocks", _filename, size()) << style::reset << endl;
 
   /*
   for(auto b : *this){
@@ -44,7 +44,7 @@ std::string Program::desc(bool colored) const{
   for(auto &b : *this){ // we loop all the blocks inside the current program object
 
     ss << b.desc();
-    ss << format(", previous: {:0>3}", b.prev ? b.prev -> n() : 0);
+    ss << fmt::format(", previous: {:0>3}", b.prev ? b.prev -> n() : 0);
     ss << endl;
 
   }

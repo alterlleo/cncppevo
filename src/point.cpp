@@ -159,14 +159,14 @@ static string coord_str(opt_data_t const &coord, col_t const &color){
   string str;
   
   if(coord && color){
-    str = format("{:" NUMBERS_WIDTH ".3f}", styled(coord.value(), fg(color.value())));
+    str = fmt::format("{:" NUMBERS_WIDTH ".3f}", styled(coord.value(), fg(color.value())));
 
   } else if(coord){
-    str = format("{:" NUMBERS_WIDTH ".3f}", coord.value());
+    str = fmt::format("{:" NUMBERS_WIDTH ".3f}", coord.value());
 
   } 
   else{
-    str = format("{:>" NUMBERS_WIDTH "}", "-");
+    str = fmt::format("{:>" NUMBERS_WIDTH "}", "-");
   }
 
   return str;
@@ -261,7 +261,7 @@ int main(){
   */
 
   cout << "Vector from p3: " << endl;
-  cout << format("{}", p3.vec()) << endl;
+  cout << fmt::format("{}", p3.vec()) << endl;
 
   cout << "Done. " << endl;
   return 0;

@@ -160,7 +160,7 @@ Block::Block(string line, BlockTRC *b) : Block(line){
 Block::~Block(){
 
   if(_debug)
-    cerr << style::italic << format("Block {:>3} destroyed [{:p}].", _n, (void *)(this)) << style::reset << endl;
+    cerr << style::italic << fmt::format("Block {:>3} destroyed [{:p}].", _n, (void *)(this)) << style::reset << endl;
 }
 
 
@@ -185,28 +185,28 @@ Block &Block::operator=(Block &b){
 string Block::desc(bool colored) const{
   
   if(!_parsed){
-    return format("[{:>3}] {:} (not parsed yet)", _n, _line);
+    return fmt::format("[{:>3}] {:} (not parsed yet)", _n, _line);
   }
 
   stringstream ss;
   
   auto color = color::red;
-  // ss << format("[{:>3}] ", _n);
+  // ss << fmt::format("[{:>3}] ", _n);
   
   if(_type == BlockType::NO_MOTION)
     color = color::gray;
   else if (_type == BlockType::RAPID)
     color = color::magenta;
   
-  ss << format("[{:>3}] ", _n);
+  ss << fmt::format("[{:>3}] ", _n);
   if (colored)
-    ss << format("G{:0>2} ", styled(static_cast<int>(_type), fmt::fg(color)));
+    ss << fmt::format("G{:0>2} ", styled(static_cast<int>(_type), fmt::fg(color)));
   else
-    ss << format("G{:0>2} ", static_cast<int>(_type));
-  ss << format("({:-^9}) ", Block::types.at(_type)) << _target.desc();
-  ss << format(" F{:>5.0f} S{:>4.0f} ", _feedrate, _spindle);
-  ss << format("T{:0>2} M{:0>2} ", _tool, _m);
-  ss << format("L{:>6.2f}mm DT{:>6.2f}s", _length, _profile.dt);
+    ss << fmt::format("G{:0>2} ", static_cast<int>(_type));
+  ss << fmt::format("({:-^9}) ", Block::types.at(_type)) << _target.desc();
+  ss << fmt::format(" F{:>5.0f} S{:>4.0f} ", _feedrate, _spindle);
+  ss << fmt::format("T{:0>2} M{:0>2} ", _tool, _m);
+  ss << fmt::format("L{:>6.2f}mm DT{:>6.2f}s", _length, _profile.dt);
   return ss.str();
 
 }
@@ -599,7 +599,7 @@ int main(){
   // Walk along b2
   b2.walk([&](Block &b, data_t t, data_t l, data_t s) {
     Point pos = b.interpolate(l);
-    cout << format("{:} {:} {:} {:} {:} {:}", t, l, s, pos.x(), pos.y(), pos.z()) << endl;
+    cout << fmt::format("{:} {:} {:} {:} {:} {:}", t, l, s, pos.x(), pos.y(), pos.z()) << endl;
   });
 
 
