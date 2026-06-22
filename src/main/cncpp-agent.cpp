@@ -17,6 +17,7 @@ using namespace std;
 using namespace rang;
 using namespace cncpp;
 using namespace chrono;
+using namespace Mads;
 
 using double_d = std::chrono::duration<double>;
 
@@ -49,7 +50,7 @@ int main(int argc, char *argv[]) {
   std::string settings_path = "tcp://localhost:9092";
   std::chrono::duration loop_period = 1ms;
   std::chrono::duration receive_timeout = 50ms;
-  bool non_blocking = false;
+  bool non_blocking = true;
 
   FsmData data(agent_name, settings_path, argv[1]); // argv[1] is machine.yml path
   // If crypto is needed, properly load keys and enable it
@@ -96,27 +97,30 @@ int main(int argc, char *argv[]) {
 
   fsm.run([&](FsmData &s) {
 
-    data.agent->receive(non_blocking);
-    
-    auto msg = data.agent->last_message();
-    std::string topic = std::get<0>(msg);
-    std::string payload = std::get<1>(msg);
+    if(data.agent -> receive(non_blocking) == message_type::json && data.agent -> last_topic() != "control"){
 
-    //cout << __LINE__ << endl;
-    // data.agent->remote_control(payload);
-    //cout << __LINE__ << endl;
 
-    if (data.machine.listening() && !payload.empty() && (topic == "fmu" || topic == "machine")) {
-      try {
-        auto in = json::parse(payload);
-        
-        if (in.contains("output") && in["output"].is_object()) {
-          data.machine.feedback(in["output"]);
+      auto msg = data.agent->last_message();
+      std::string topic = std::get<0>(msg);
+      std::string payload = std::get<1>(msg);
+
+      //cout << __LINE__ << endl;
+      // data.agent->remote_control(payload);
+      //cout << __LINE__ << endl;
+
+      if (data.machine.listening() && !payload.empty() && (topic == "fmu" || topic == "machine")) {
+        try {
+          auto in = json::parse(payload);
+          
+          if (in.contains("output") && in["output"].is_object()) {
+            data.machine.feedback(in["output"]);
+          }
+        } catch (const json::exception& e) {
+          cerr << fg::yellow << "JSON Parsing Error: " << e.what() << style::reset << endl;
         }
-      } catch (const json::exception& e) {
-        cerr << fg::yellow << "JSON Parsing Error: " << e.what() << style::reset << endl;
       }
     }
+    
   });
 
   // Shutdown procedure
