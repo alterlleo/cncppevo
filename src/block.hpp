@@ -228,6 +228,7 @@ namespace cncpp{
       data_t _theta_0 = 0, _dtheta = 0;     // dtheta is the total delta of the angle
       data_t _acc = 0;
 
+      bool _positioning;
       size_t _m = 0;                    // machine command (M command of the gcode)
       bool _parsed = false;             // flag for checking if the block has been parsed or not
 

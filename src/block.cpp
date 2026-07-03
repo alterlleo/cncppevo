@@ -478,8 +478,13 @@ void Block::compute(){
   data_t &a = _profile.a;
   data_t &d = _profile.d;
   data_t &f_m = _profile.f;
-  data_t &l = _profile.l;            
-  data_t &A = _acc;               
+  data_t &l = _profile.l;
+  data_t A = _acc;   
+  
+  if(prev && (this -> _target.a() != prev -> _target.a() || this -> _target.c() != prev -> _target.c())){
+
+    A = _machine -> A_stepper();
+  }              
 
   f_m = _arc_feedrate / 60.0;     
   
