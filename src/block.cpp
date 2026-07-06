@@ -36,78 +36,42 @@ const map<Block::BlockType, string> Block::types = {
   {BlockType::NO_MOTION, "No motion"}
 };
 
-data_t Block::Profile::lambda(data_t t, data_t &s){
+data_t Block::Profile::lambda(data_t time, data_t &s) {
+    if (time < 0) {
+        s = fs;
+        current_acc = 0.0;
+        return 0.0;
+    }
 
-  data_t r;               // result
-  current_acc = 0.0;
+    if (time >= dt) {
+        s = fe;
+        current_acc = 0.0;
+        return 1.0;
+    }
 
-  if (t < 0) {
+    // 7 phases jerk
+    data_t jerks[7] = { j, 0.0, -j, 0.0, -j, 0.0, j };
+    
+    data_t current_time = time;
+    data_t pos = 0.0;
+    data_t vel = fs;
+    data_t acc = 0.0;
 
-    r = 0.0; s = fs;
+    for (int i = 0; i < 7; i++) {
+        if (t[i] == 0.0) continue;
 
-  } else if (t < dt_1) {
-    // Acc
-    r = fs * t + 0.5 * a * pow(t, 2);
-    s = fs + a * t;
+        data_t delta_t = (current_time > t[i]) ? t[i] : current_time;
+        pos += vel * delta_t + 0.5 * acc * pow(delta_t, 2) + (jerks[i] * pow(delta_t, 3)) / 6.0;
+        vel += acc * delta_t + 0.5 * jerks[i] * pow(delta_t, 2);
+        acc += jerks[i] * delta_t;
 
-  } else if (t < dt_1 + dt_m) { 
-    // Cruise
-    data_t t_m = t - dt_1;
-    r = (fs * dt_1 + 0.5 * a * pow(dt_1, 2)) + f * t_m;
-    s = f;
+        current_time -= delta_t;
+        if (current_time <= 0) break;
+    }
 
-  } else if (t < dt_1 + dt_m + dt_2) {
-     // Dec
-    data_t t_2 = t - (dt_1 + dt_m);
-    data_t r_m = (fs * dt_1 + 0.5 * a * pow(dt_1, 2)) + f * dt_m;
-    r = r_m + f * t_2 + 0.5 * d * pow(t_2, 2);
-    s = f + d * t_2;
-
-  } else {
-
-    r = l; s = fe;
-  }
-
-  r /= l;
-  s *= 60;
-  return r;
-
-  /*
-  if(t < 0){
-    r = 0.0;
-    s = 0;
-
-  } else if(t < dt_1){                // acceleration phase
-
-    r = a * pow(t, 2) / 2.0;
-    s = a * t;
-    current_acc = a;
-
-  } else if(t < dt_1 + dt_m){         // maintenance phase
-
-    r = f * (dt_1 / 2.0 + (t - dt_1));
-    s = f;
-    current_acc = 0.0;
-
-  } else if(t < dt_1 + dt_m + dt_2){ // deceleration phase
-
-    data_t t_2 = dt_1 + dt_m;
-    r = f * dt_1 / 2.0 + f * (dt_m + t - t_2) + d / 2.0 * (pow(t, 2) + pow(t_2, 2)) - d * t * t_2;
-    s = f + d * (t - t_2);
-    current_acc = d;      // it is negative
-
-  } else{
-
-    r = l;
-    s = 0.0;
-    current_acc = 0.0;
-  }
-
-  r /= l;
-  s *= 60;
-
-  return r;
-  */
+    current_acc = acc;
+    s = vel * 60.0; // to mm/min or deg/min)
+    return pos / l;
 }
 
 
@@ -466,51 +430,91 @@ Point Block::start_point(){
 }
 
 
-void Block::compute(){
+void Block::compute() {
 
   _profile.l = _length;
-
-  data_t &dt_1 = _profile.dt_1;
-  data_t &dt_2 = _profile.dt_2;
-  data_t &dt_m = _profile.dt_m;
-  data_t &fs = _profile.fs;
-  data_t &fe = _profile.fe;
-  data_t &a = _profile.a;
-  data_t &d = _profile.d;
-  data_t &f_m = _profile.f;
-  data_t &l = _profile.l;
   data_t A = _acc;   
-  
-  if(prev && (this -> _target.a() != prev -> _target.a() || this -> _target.c() != prev -> _target.c())){
-
-    A = _machine -> A_stepper();
-  }              
-
-  f_m = _arc_feedrate / 60.0;     
-  
-  dt_1 = fabs(f_m - fs) / A;
-  dt_2 = fabs(f_m - fe) / A;
-
-  data_t l1 = ((fs + f_m) / 2.0) * dt_1;
-  data_t l2 = ((fe + f_m) / 2.0) * dt_2;
-
-  if (l1 + l2 <= l) {
-    dt_m = (l - (l1 + l2)) / f_m;
-
-  } else {
-    f_m = sqrt((2.0 * A * l + pow(fs, 2) + pow(fe, 2)) / 2.0);
-    
-    dt_1 = (f_m - fs) / A;
-    dt_2 = (f_m - fe) / A;
-    dt_m = 0.0;
+  data_t J = _machine->J(); 
+  if(prev && (this->_target.a() != prev->_target.a() || this->_target.c() != prev->_target.c())){
+    A = _machine->A_stepper();
   }
 
+  _profile.j = J;
+  _profile.a_max = A;
+  _profile.d_max = A;
+  data_t &fs = _profile.fs;
+  data_t &fe = _profile.fe;
+  data_t v_cruise = _arc_feedrate / 60.0;     
+  data_t L = _length;
+
+  // Helping lambda function to calculate the S-curve profile for acceleration or deceleration. 3 phases:
+  // Jerk + (t_j1), Constant Acceleration (t_const), Jerk - (t_j2)
+  // The area under the S-curve is equal to the area of a trapezoid with the same duration and speed.
+  auto calc_s_curve = [&](data_t v_start, data_t v_end, data_t max_acc, data_t &t_j1, data_t &t_const, data_t &t_j2) -> data_t {
+    if (fabs(v_start - v_end) < 1e-6) {
+      t_j1 = t_const = t_j2 = 0.0;
+      return 0.0;
+    }
+    
+    data_t delta_v = fabs(v_end - v_start);
+    data_t tj_ideal = max_acc / J;
+    data_t dv_ideal = J * pow(tj_ideal, 2);
+
+    if (delta_v <= dv_ideal) { // acceleration triangle
+      t_j1 = sqrt(delta_v / J);
+      t_const = 0.0;
+      t_j2 = t_j1;
+
+    } else { // acceleration trapezoid
+      t_j1 = tj_ideal;
+      t_j2 = tj_ideal;
+      t_const = (delta_v - dv_ideal) / max_acc;
+    }
+    
+    data_t total_time = t_j1 + t_const + t_j2;
+    return ((v_start + v_end) / 2.0) * total_time;
+  };
+
+  data_t d_acc, d_dec;
+  auto try_cruise_vel = [&](data_t v_target) -> data_t {
+    d_acc = calc_s_curve(fs, v_target, _profile.a_max, _profile.t[0], _profile.t[1], _profile.t[2]);
+    d_dec = calc_s_curve(v_target, fe, _profile.d_max, _profile.t[4], _profile.t[5], _profile.t[6]);
+    return d_acc + d_dec;
+  };
+
+  data_t d_req = try_cruise_vel(v_cruise);
+
+  // 2 casess: long profile (we can reach v_cruise) and short profile (we can't reach v_cruise)
+  if (d_req <= L) { // long profile
+    _profile.f = v_cruise;
+    _profile.t[3] = (L - d_req) / v_cruise;
+
+  } else { // short profile
+    data_t v_low = max(fs, fe);
+    data_t v_high = v_cruise;
+    data_t v_peak = v_low;
+    
+    for (int i = 0; i < 20; i++) {
+      v_peak = (v_low + v_high) / 2.0;
+      if (try_cruise_vel(v_peak) > L) {
+        v_high = v_peak;
+      } else {
+        v_low = v_peak;
+      }
+    }
+    
+    _profile.f = v_peak;
+    _profile.t[3] = 0.0;
+    try_cruise_vel(v_peak);
+  }
+
+  // total time for quantization
+  data_t t_total = 0.0;
+  for (int i = 0; i < 7; i++) {
+    t_total += _profile.t[i];
+  }
   data_t dq;
-  _profile.dt = _machine -> quantize(dt_1 + dt_m + dt_2, dq);
-  
-  _profile.a = (dt_1 > 0) ? (f_m - fs) / dt_1 : 0.0;
-  _profile.d = (dt_2 > 0) ? (fe - f_m) / dt_2 : 0.0; 
-  _profile.f = f_m;
+  _profile.dt = _machine -> quantize(t_total, dq);
 }
 
 void Block::calc_arc() {

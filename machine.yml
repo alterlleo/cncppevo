@@ -1,7 +1,7 @@
 ---
 
 machine:
-  A: 25.0            # max acceleration      [meters/secondssquare]
+  A: 3.0            # max acceleration      [meters/secondssquare]
   tq: 0.001        # step time             [milliseconds]
   fmax: 300       # maximum feedrate      [millimeters/minute]
   max_error: 0.005  # maximum allowable error [millimeters]

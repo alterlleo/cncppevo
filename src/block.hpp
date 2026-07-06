@@ -42,14 +42,16 @@ namespace cncpp{
        * 
        */
       struct Profile{
-        data_t a, d;
+        data_t j;
+        data_t a_max, d_max;
         data_t f, l;
         data_t fs, fe;
-        data_t dt_1, dt_m, dt_2;
+        
+        data_t t[7]; // 7 phases       
+        
         data_t dt;
         data_t current_acc;
 
-        // output -> lambda function with time and speed as parameters
         data_t lambda(data_t t, data_t &s);
       };
 
