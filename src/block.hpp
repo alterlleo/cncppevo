@@ -144,7 +144,7 @@ namespace cncpp{
        * @brief Function for walking along the block -> it converts a block in a sequence of evaluations for each time step
        * 
        */
-      void walk(function<void(Block &b, data_t t, data_t l, data_t s)> f);
+      void walk(function<void(Block &b, data_t t, data_t l, data_t s)> f, data_t &time_accum);
 
       /**
        * 
@@ -233,7 +233,7 @@ namespace cncpp{
       bool _positioning;
       size_t _m = 0;                    // machine command (M command of the gcode)
       bool _parsed = false;             // flag for checking if the block has been parsed or not
-
+      data_t time_accum = 0.0;
 
       /*
         ____       _            _                        _   _               _     

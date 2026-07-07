@@ -307,11 +307,12 @@ Point Block::interpolate(data_t time, data_t &lambda, data_t &speed){
   return interpolate(lambda);
 }
 
-void Block::walk(function<void(Block &b, data_t t, data_t l, data_t s)> f){
+void Block::walk(function<void(Block &b, data_t t, data_t l, data_t s)> f, data_t &time_accum){
 
   if(!_parsed) throw CNCError("Block not parsed", this);
 
-  data_t t = 0.0, l, s;
+  data_t t = time_accum;
+  data_t l, s;
 
   while(t < _profile.dt /*+ _machine -> tq() / 2.0*/) {     // we add half time sample in order to be more robust. Otherwise the risk would be to miss the last time step
 
@@ -321,6 +322,7 @@ void Block::walk(function<void(Block &b, data_t t, data_t l, data_t s)> f){
 
   }
 
+  time_accum = t - _profile.dt; // we keep the remaining time for the next block
 }
 
 void Block::update_target(data_t x, data_t y){
@@ -513,8 +515,8 @@ void Block::compute() {
   for (int i = 0; i < 7; i++) {
     t_total += _profile.t[i];
   }
-  data_t dq;
-  _profile.dt = _machine -> quantize(t_total, dq);
+  // data_t dq;
+  _profile.dt = t_total;// _machine -> quantize(t_total, dq);
 }
 
 void Block::calc_arc() {

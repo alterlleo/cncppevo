@@ -180,32 +180,46 @@ Program &Program::operator<<(string line){
     }
 
     data_t v_junction = compute_limit_v(*prev, current);
-
     prev -> set_fe(v_junction);
     current.set_fs(v_junction);
+    prev -> compute();
+    current.compute();
 
     BlockTRC* b = prev;
     int steps = 0;
-    int H = 10;
+    int H = 10; // horizon
+    data_t J = _machine -> J();
 
-    while(b && b -> prev && steps < H){
+    while (b && b -> prev && steps < H) {
+        BlockTRC* p = b -> prev;
+        
+        data_t A = b -> a();
+        data_t L = b -> length();
+        data_t Vf = b -> profile().fe;
+        
+        // breaking for S curve
+        // L = (Vi^2 - Vf^2)/(2A) + (Vi + Vf)*(A / 2J)
+        data_t B = (A * A) / J;
+        data_t C = B * Vf - (Vf * Vf) - (2.0 * A * L);
+        
+        data_t max_vi;
+        if (B * B - 4.0 * C >= 0) {
+            max_vi = (-B + sqrt(B * B - 4.0 * C)) / 2.0;
+        } else {
+            max_vi = Vf;
+        }
 
-      BlockTRC* p = b -> prev;
-      data_t max_fe = sqrt(pow(b -> profile().fe, 2) + 2 * b -> a() * b -> length());
+        if (p -> profile().fe > max_vi) {
+            p -> set_fe(max_vi);
+            b -> set_fs(max_vi);
+            p -> compute(); 
+            b -> compute();
+        } else {
+            break; 
+        }
 
-      if (p->profile().fe > max_fe) {
-
-        p -> set_fe(max_fe);
-        b -> set_fs(max_fe);
-        p -> compute(); 
-        b -> compute();
-
-      } else {
-        break; 
-      }
-
-      b = p;
-      steps++;
+        b = p;
+        steps++;
     }
   }
   return *this;
