@@ -38,13 +38,13 @@ const map<Block::BlockType, string> Block::types = {
 
 data_t Block::Profile::lambda(data_t time, data_t &s) {
     if (time < 0) {
-        s = fs;
+        s = fs * 60.0;
         current_acc = 0.0;
         return 0.0;
     }
 
     if (time >= dt) {
-        s = fe;
+        s = fe * 60.0;
         current_acc = 0.0;
         return 1.0;
     }
