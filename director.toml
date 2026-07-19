@@ -38,7 +38,7 @@ relaunch = false
 tty = false
 
 [cncppevo]
-command = "./build/src/main/CNCagent machine.yml project_path_no_trc.gcode"
+command = "./build/src/main/CNCagent machine.yml test-x.gcode"
 enabled = true
 tty = false
 workdir = ""
