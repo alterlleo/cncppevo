@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
   std::filesystem::path exec = argv[0];
   std::string agent_name = exec.stem().string();
   std::string settings_path = "tcp://localhost:9092";
-  std::chrono::duration loop_period = 1ms;
+  std::chrono::duration loop_period = 5ms;
   std::chrono::duration receive_timeout = 50ms;
   bool non_blocking = true;
 
