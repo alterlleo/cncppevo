@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 set(VERSION "0.0.1")
 project(CNCpp VERSION ${VERSION} LANGUAGES CXX)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
 if(UNIX AND NOT APPLE)
   set(LINUX TRUE)
