@@ -11,6 +11,8 @@ endif()
 if(CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
 endif()
+add_compile_definitions(FMT_HAS_CONSTEVAL=0)
+
 
 # add_definitions(-DJSON_USE_GLOBAL_UDLS=0 -DJSON_DIAGNOSTICS=0)
 #   ____       _
@@ -90,7 +92,7 @@ message(STATUS "Fetching dependencies...")
 
 FetchContent_Declare(fmt
   GIT_REPOSITORY https://github.com/fmtlib/fmt
-  GIT_TAG        11.0.2
+  GIT_TAG        12.2.0
   GIT_SHALLOW    TRUE
 )
 

@@ -272,7 +272,7 @@ state_t do_rapid_motion(T &data) {
     Point tgt = b.target();
     data_t lambda = min(data.machine.error() / b.length(), 1.0);
 
-    cout << fmt::format("{:0>3d} {:0>2d} {:.3f} {:.3f} {:.3f} {:.3f} {:.1f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f}", b.n(), static_cast<int>(b.type()), data.t_tot, data.t_blk, lambda, lambda * b.length(), data.machine.fmax(), b.profile().current_acc, tgt.x(), tgt.y(), tgt.z(), p.x(), p.y(), p.z()) << endl;
+    cout << format("{:0>3d} {:0>2d} {:.3f} {:.3f} {:.3f} {:.3f} {:.1f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f}", b.n(), static_cast<int>(b.type()), data.t_tot, data.t_blk, lambda, lambda * b.length(), data.machine.fmax(), b.profile().current_acc, tgt.x(), tgt.y(), tgt.z(), p.x(), p.y(), p.z()) << endl;
 
   } catch (const bad_optional_access &e){
     cerr << fg::yellow << "Waiting for machine position" << fg::reset << endl;
@@ -303,10 +303,10 @@ state_t do_interp_motion(T &data) {
 
   // step 2 -> print values table
   try{
-    cout << fmt::format("{:0>3d} {:0>2d} {:.3f} {:.3f} {:.3f} {:.3f} {:.1f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f}", b.n(), static_cast<int>(b.type()), data.t_tot, data.t_blk, lambda, lambda * b.length(), speed, b.profile().current_acc, tgt.x(), tgt.y(), tgt.z(), p.x(), p.y(), p.z()) << endl;
+    cout << format("{:0>3d} {:0>2d} {:.3f} {:.3f} {:.3f} {:.3f} {:.1f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f}", b.n(), static_cast<int>(b.type()), data.t_tot, data.t_blk, lambda, lambda * b.length(), speed, b.profile().current_acc, tgt.x(), tgt.y(), tgt.z(), p.x(), p.y(), p.z()) << endl;
   
   } catch(const bad_optional_access &e){
-    cout << fmt::format("{:0>3d} {:0>2d} {:.3f} {:.3f} {:.3f} {:.3f} {:.1f} {:.3f} {:.3f} {:.3f} {:.3f} {:>3} {:>3} {:>3}", b.n(), static_cast<int>(b.type()), data.t_tot, data.t_blk, lambda, lambda * b.length(), speed, b.profile().current_acc, tgt.x(), tgt.y(), tgt.z(), "-", "-", "-") << endl;  
+    cout << format("{:0>3d} {:0>2d} {:.3f} {:.3f} {:.3f} {:.3f} {:.1f} {:.3f} {:.3f} {:.3f} {:.3f} {:>3} {:>3} {:>3}", b.n(), static_cast<int>(b.type()), data.t_tot, data.t_blk, lambda, lambda * b.length(), speed, b.profile().current_acc, tgt.x(), tgt.y(), tgt.z(), "-", "-", "-") << endl;  
   }
 
   // step 3 -> sync the machine
