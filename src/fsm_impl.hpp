@@ -50,16 +50,14 @@ template<class T>
 state_t do_init(T &data) {
   state_t next_state = cncpp::STATE_IDLE;
   
-  // STEPS
+  // STEP
 
-  // step 1 -> connnect machine via MQTT
-
-  // step 2 -> set machine to zero
+  // step 1 -> set machine to zero
   data.machine.position(data.machine.zero());
   data.machine.setpoint(data.machine.zero());
   data.machine.set_vel(0.0, 0.0);
 
-  // step 3 -> message the user
+  // step 2 -> message the user
   cerr << fg::green << "Connected to machine" << style::bold << style::reset << fg::reset << endl;
   
   return next_state;
@@ -106,7 +104,7 @@ state_t do_idle(T &data) {
   data.t_tot = data.t_blk = 0.0;
 
   // step 4 -> synch
-  // data.machine.sync(false);
+  data.machine.sync(false);
   return next_state;
 }
 
